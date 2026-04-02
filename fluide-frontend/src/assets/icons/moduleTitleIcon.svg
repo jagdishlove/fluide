@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="80" height="80" viewBox="0 0 80 80">
+  <defs>
+    <filter id="Path_42967" x="0" y="0" width="80" height="80" filterUnits="userSpaceOnUse">
+      <feOffset dy="3" input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feFlood flood-color="#515151" flood-opacity="0.129"/>
+      <feComposite operator="in" in2="blur"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+  </defs>
+  <g id="Group_48174" data-name="Group 48174" transform="translate(-551.236 -697)">
+    <g id="Group_48173" data-name="Group 48173" transform="translate(432.236 420)">
+      <g transform="matrix(1, 0, 0, 1, 119, 277)" filter="url(#Path_42967)">
+        <path id="Path_42967-2" data-name="Path 42967" d="M31,0A31,31,0,1,1,0,31,31,31,0,0,1,31,0Z" transform="translate(9 6)" fill="#eef2ff"/>
+      </g>
+    </g>
+    <g id="module" transform="translate(575.868 681.707)">
+      <g id="Group_48117" data-name="Group 48117" transform="translate(0 39.293)">
+        <path id="Path_42948" data-name="Path 42948" d="M284.464,155.708,270,161.132v3.161l14.464-5.424Z" transform="translate(-253.728 -148.692)" fill="#8eaec4"/>
+        <path id="Path_42949" data-name="Path 42949" d="M14.464,245.614,0,240.19v3.15l14.464,5.424Z" transform="translate(0 -228.083)"/>
+        <path id="Path_42950" data-name="Path 42950" d="M270,248.764l14.464-5.424v-3.15L270,245.614Z" transform="translate(-253.728 -228.083)"/>
+        <path id="Path_42951" data-name="Path 42951" d="M14.464,164.293v-3.161L0,155.708v3.161Z" transform="translate(0 -148.692)" fill="#8eaec4"/>
+        <path id="Path_42952" data-name="Path 42952" d="M270,329.927v3.387l14.464-5.424V324.5Z" transform="translate(-253.728 -307.314)" fill="#8eaec4"/>
+        <path id="Path_42953" data-name="Path 42953" d="M14.464,329.927,0,324.5v3.387l14.464,5.424Z" transform="translate(0 -307.314)" fill="#8eaec4"/>
+        <path id="Path_42954" data-name="Path 42954" d="M29.464,50.141l14.464-5.424L29.464,39.293,15,44.717Z" transform="translate(-14.096 -39.293)"/>
+      </g>
+    </g>
+  </g>
+</svg>

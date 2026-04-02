@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="89.204" height="89.204" viewBox="0 0 89.204 89.204">
+  <defs>
+    <filter id="Path_42967" x="0" y="0" width="89.204" height="89.204" filterUnits="userSpaceOnUse">
+      <feOffset dy="3" input="SourceAlpha"/>
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feFlood flood-color="#515151" flood-opacity="0.129"/>
+      <feComposite operator="in" in2="blur"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+  </defs>
+  <g id="Group_48160" data-name="Group 48160" transform="translate(-351 -885)">
+    <g transform="matrix(1, 0, 0, 1, 351, 885)" filter="url(#Path_42967)">
+      <path id="Path_42967-2" data-name="Path 42967" d="M35.6,0A35.6,35.6,0,1,1,0,35.6,35.6,35.6,0,0,1,35.6,0Z" transform="translate(9 6)" fill="#eef2ff"/>
+    </g>
+    <g id="module" transform="translate(376.092 910.099)">
+      <g id="Group_48117" data-name="Group 48117">
+        <path id="Path_42948" data-name="Path 42948" d="M288.362,155.708,270,162.594v4.012l18.362-6.886Z" transform="translate(-249.343 -146.801)" fill="#283132"/>
+        <path id="Path_42949" data-name="Path 42949" d="M18.362,247.076,0,240.19v4l18.362,6.886Z" transform="translate(0 -224.82)" fill="#8eaec4"/>
+        <path id="Path_42950" data-name="Path 42950" d="M270,251.075l18.362-6.886v-4L270,247.076Z" transform="translate(-249.343 -224.82)" fill="#8eaec4"/>
+        <path id="Path_42951" data-name="Path 42951" d="M18.362,166.606v-4.012L0,155.708v4.012Z" transform="translate(0 -146.801)" fill="#283132"/>
+        <path id="Path_42952" data-name="Path 42952" d="M270,331.389v4.3l18.362-6.886v-4.3Z" transform="translate(-249.343 -302.682)" fill="#283132"/>
+        <path id="Path_42953" data-name="Path 42953" d="M18.362,331.389,0,324.5v4.3l18.362,6.886Z" transform="translate(0 -302.682)" fill="#283132"/>
+        <path id="Path_42954" data-name="Path 42954" d="M33.362,53.065l18.362-6.886L33.362,39.293,15,46.179Z" transform="translate(-13.852 -39.293)" fill="#8eaec4"/>
+      </g>
+    </g>
+  </g>
+</svg>
