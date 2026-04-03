@@ -1,10 +1,11 @@
 const express = require("express");
+
 const router = express.Router();
-let validate = require("../middlewares/validate");
+const passport = require("passport");
+const validate = require("../middlewares/validate");
 const controller = require("../controllers");
 const validation = require("../validations");
-let auth = require("../middlewares/auth");
-const passport = require("passport");
+const auth = require("../middlewares/auth");
 
 // router.post("/quiz-answer", validate(validation.userValidation.getQuizAnswer), controller.userController.getQuizAnswer)
 router.post(

@@ -1,9 +1,10 @@
 const mongoose = require("mongoose");
+const { WebSocketServer } = require("ws");
 const app = require("./app");
 const config = require("./config/config");
 const logger = require("./config/logger");
-const { WebSocketServer } = require("ws");
 const { userController } = require("./controllers");
+
 const wss = new WebSocketServer({ port: config.socket_port });
 
 let server;
@@ -53,41 +54,37 @@ wss.on("connection", function (ws) {
         userController.getDescription(data.payload, function (err, response) {
           let word = 0;
           if (word == 0 && (response == "" || response == " ")) {
-          } else {
-            if (
-              response != "##" ||
-              response != "###" ||
-              response != " ##" ||
-              response != " ###"
+          } else if (
+            response != "##" ||
+            response != "###" ||
+            response != " ##" ||
+            response != " ###"
+          ) {
+            word = 1;
+            if (response == ".\n\n") {
+              ws.send(JSON.stringify("."));
+              ws.send(JSON.stringify(""));
+              ws.send(JSON.stringify(""));
+            } else if (
+              response == "##" ||
+              response == "###" ||
+              response == " ##" ||
+              response == " ###"
             ) {
-              word = 1;
-              if (response == ".\n\n") {
-                ws.send(JSON.stringify("."));
-                ws.send(JSON.stringify(""));
-                ws.send(JSON.stringify(""));
-              } else {
-                if (
-                  response == "##" ||
-                  response == "###" ||
-                  response == " ##" ||
-                  response == " ###"
-                ) {
-                } else if (response == ".\n\n") {
-                  ws.send(JSON.stringify("."));
-                  ws.send(JSON.stringify(""));
-                  ws.send(JSON.stringify(""));
-                } else if (response == "\n\n") {
-                  ws.send(JSON.stringify(""));
-                  ws.send(JSON.stringify(""));
-                } else if (response.includes("\n\n")) {
-                  let parts = response.split(/(\n\n)/);
-                  ws.send(JSON.stringify(parts[0]));
-                  ws.send(JSON.stringify(""));
-                  ws.send(JSON.stringify(""));
-                } else {
-                  ws.send(JSON.stringify(response));
-                }
-              }
+            } else if (response == ".\n\n") {
+              ws.send(JSON.stringify("."));
+              ws.send(JSON.stringify(""));
+              ws.send(JSON.stringify(""));
+            } else if (response == "\n\n") {
+              ws.send(JSON.stringify(""));
+              ws.send(JSON.stringify(""));
+            } else if (response.includes("\n\n")) {
+              const parts = response.split(/(\n\n)/);
+              ws.send(JSON.stringify(parts[0]));
+              ws.send(JSON.stringify(""));
+              ws.send(JSON.stringify(""));
+            } else {
+              ws.send(JSON.stringify(response));
             }
           }
         });
@@ -139,41 +136,37 @@ wss.on("connection", function (ws) {
         userController.getExample(data.payload, function (err, response) {
           let word = 0;
           if (word == 0 && (response == "" || response == " ")) {
-          } else {
-            if (
-              response != "##" ||
-              response != "###" ||
-              response != " ##" ||
-              response != " ###"
+          } else if (
+            response != "##" ||
+            response != "###" ||
+            response != " ##" ||
+            response != " ###"
+          ) {
+            word = 1;
+            if (response == ".\n\n") {
+              ws.send(JSON.stringify("."));
+              ws.send(JSON.stringify(""));
+              ws.send(JSON.stringify(""));
+            } else if (
+              response == "##" ||
+              response == "###" ||
+              response == " ##" ||
+              response == " ###"
             ) {
-              word = 1;
-              if (response == ".\n\n") {
-                ws.send(JSON.stringify("."));
-                ws.send(JSON.stringify(""));
-                ws.send(JSON.stringify(""));
-              } else {
-                if (
-                  response == "##" ||
-                  response == "###" ||
-                  response == " ##" ||
-                  response == " ###"
-                ) {
-                } else if (response == ".\n\n") {
-                  ws.send(JSON.stringify("."));
-                  ws.send(JSON.stringify(""));
-                  ws.send(JSON.stringify(""));
-                } else if (response == "\n\n") {
-                  ws.send(JSON.stringify(""));
-                  ws.send(JSON.stringify(""));
-                } else if (response.includes("\n\n")) {
-                  let parts = response.split(/(\n\n)/);
-                  ws.send(JSON.stringify(parts[0]));
-                  ws.send(JSON.stringify(""));
-                  ws.send(JSON.stringify(""));
-                } else {
-                  ws.send(JSON.stringify(response));
-                }
-              }
+            } else if (response == ".\n\n") {
+              ws.send(JSON.stringify("."));
+              ws.send(JSON.stringify(""));
+              ws.send(JSON.stringify(""));
+            } else if (response == "\n\n") {
+              ws.send(JSON.stringify(""));
+              ws.send(JSON.stringify(""));
+            } else if (response.includes("\n\n")) {
+              const parts = response.split(/(\n\n)/);
+              ws.send(JSON.stringify(parts[0]));
+              ws.send(JSON.stringify(""));
+              ws.send(JSON.stringify(""));
+            } else {
+              ws.send(JSON.stringify(response));
             }
           }
         });
