@@ -1,5 +1,5 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-const config = require("../config/config");
+const config = require("./config");
 
 // Initialize the Google Generative AI with your API Key
 // Ensure your config file has a 'googleApiKey' property

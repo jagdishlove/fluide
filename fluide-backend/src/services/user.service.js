@@ -1,17 +1,17 @@
-let { Configuration, OpenAIApi } = require("openai");
-const config = require("../config/config");
-const ApiError = require("../utils/ApiError");
-const { User } = require("../models");
+const { Configuration, OpenAIApi } = require("openai");
 const httpStatus = require("http-status");
-const tokenService = require("./token.service");
 const bcrypt = require("bcryptjs");
-const emailService = require("./email.service");
-let { ChatGoogleGenerativeAI } = require("@langchain/google-genai");
-let {
+const { ChatGoogleGenerativeAI } = require("@langchain/google-genai");
+const {
   SystemMessage,
   HumanMessage,
   AIMessage,
 } = require("@langchain/core/messages");
+const config = require("../config/config");
+const ApiError = require("../utils/ApiError");
+const { User } = require("../models");
+const tokenService = require("./token.service");
+const emailService = require("./email.service");
 
 const chat1 = new ChatGoogleGenerativeAI({
   apiKey: config.googleApiKey,
@@ -76,7 +76,7 @@ const getModule = async (data) => {
       new HumanMessage(
         `Topic: ${topic}
       Student’s Level: ${level}
-      Student’s Language: ${language}`,
+      Student’s Language: ${language}`
       ),
     ]);
     // const newResponse = {
@@ -160,7 +160,7 @@ const getLessons = async (data) => {
       `Topic: ${topic} 
       Module: ${module_name}
       Student’s Level: ${level}
-      Student’s Language: ${language}`,
+      Student’s Language: ${language}`
     ),
   ]);
   return response;
@@ -283,7 +283,7 @@ const register = async (data) => {
     await emailService.sendVerificationEmail(data.email, token.accessToken);
     await user.save();
     delete user.password;
-    return { user: user, token: token };
+    return { user, token };
   }
 };
 
@@ -292,24 +292,24 @@ const login = async (data) => {
   if (!userExist) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
-      "Please enter a valid email address and password.",
+      "Please enter a valid email address and password."
     );
   } else {
     if (userExist.isVerified == false) {
       throw new ApiError(
         httpStatus.BAD_REQUEST,
-        "Please verify your account before proceeding.",
+        "Please verify your account before proceeding."
       );
     }
     const valid = bcrypt.compareSync(data.password, userExist.password);
     if (!valid) {
       throw new ApiError(
         httpStatus.BAD_REQUEST,
-        "Please enter a valid email address and password.",
+        "Please enter a valid email address and password."
       );
     } else {
       const token = await tokenService.generateAuthTokens(userExist);
-      return { user: userExist, token: token };
+      return { user: userExist, token };
     }
   }
 };
@@ -325,7 +325,7 @@ const updateProfile = async (data, userData) => {
 const getProfile = async (userData) => {
   const user = await User.findById(userData._id);
   delete user.password;
-  return { user: user };
+  return { user };
 };
 
 const deleteProfile = async (user) => {
@@ -338,19 +338,18 @@ const loginSucess = async (userData) => {
   let user = await User.findOne({ email: userData.emails[0].value });
   if (user) {
     const token = await tokenService.generateAuthTokens(user);
-    return { user: user, token: token };
-  } else {
-    user = new User({ email: userData.emails[0].value, isVerified: true });
-    await user.save();
-    const token = await tokenService.generateAuthTokens(user);
-    return { user: user, token: token };
+    return { user, token };
   }
+  user = new User({ email: userData.emails[0].value, isVerified: true });
+  await user.save();
+  const token = await tokenService.generateAuthTokens(user);
+  return { user, token };
 };
 
 const verifyEmail = async (data) => {
-  let user = await User.findOneAndUpdate(
+  const user = await User.findOneAndUpdate(
     { _id: data.id },
-    { isVerified: true },
+    { isVerified: true }
   );
   return user;
 };
@@ -361,7 +360,7 @@ const changePassword = async (data, user) => {
   if (!valid) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
-      "Please enter the correct old password.",
+      "Please enter the correct old password."
     );
   } else {
     const salt = bcrypt.genSaltSync(10);
@@ -386,11 +385,11 @@ function generateRandomString(length) {
 }
 
 const resetPassword = async (data) => {
-  let userExist = await User.findOne({ email: data.email });
+  const userExist = await User.findOne({ email: data.email });
   if (!userExist) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
-      "The email you provided doesn't exist with us.",
+      "The email you provided doesn't exist with us."
     );
   }
   const randomString = generateRandomString(10);
@@ -399,7 +398,7 @@ const resetPassword = async (data) => {
   await emailService.sendResetPasswordEmail(data.email, randomString);
   await User.findOneAndUpdate(
     { email: data.email },
-    { password: hashPassword },
+    { password: hashPassword }
   );
   return userExist;
 };

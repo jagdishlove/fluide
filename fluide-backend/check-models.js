@@ -40,16 +40,16 @@ async function listAvailableModels() {
     });
 
     console.log(
-      "\n💡 Tip: Use the model name (e.g., 'gemini-pro', 'gemini-1.5-flash') in your code",
+      "\n💡 Tip: Use the model name (e.g., 'gemini-pro', 'gemini-1.5-flash') in your code"
     );
   } catch (error) {
     console.error("❌ Error fetching models:", error.message);
     console.error("\nPossible fixes:");
     console.error(
-      "1. Make sure GOOGLE_API_KEY is set correctly in your .env file",
+      "1. Make sure GOOGLE_API_KEY is set correctly in your .env file"
     );
     console.error(
-      "2. Enable 'Generative Language API' in Google Cloud Console",
+      "2. Enable 'Generative Language API' in Google Cloud Console"
     );
     console.error("3. Make sure your API key has access to this API");
     process.exit(1);

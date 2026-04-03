@@ -6,16 +6,17 @@ const compression = require("compression");
 const cors = require("cors");
 const passport = require("passport");
 const httpStatus = require("http-status");
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
+const bodyParser = require("body-parser");
+const cookieSession = require("cookie-session");
 const config = require("./config/config");
 const morgan = require("./config/morgan");
 const { jwtStrategy } = require("./config/passport");
-const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const { authLimiter } = require("./middlewares/rateLimiter");
 const routes = require("./routes");
 const { errorConverter, errorHandler } = require("./middlewares/error");
 const ApiError = require("./utils/ApiError");
-const bodyParser = require("body-parser");
-const cookieSession = require("cookie-session");
+
 const jsonParser = bodyParser.json();
 
 const app = express();
@@ -50,7 +51,7 @@ app.use(function (req, res, next) {
   next();
 });
 
-//app.use(cors({ origin : 'http://localhost:3000', credentials: true }));
+// app.use(cors({ origin : 'http://localhost:3000', credentials: true }));
 
 app.use(
   cookieSession({
