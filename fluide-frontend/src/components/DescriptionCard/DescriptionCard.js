@@ -132,11 +132,11 @@ const DescriptionCard = ({
 
   localStorage.setItem(
     "description",
-    JSON.stringify(liveWords.filter((word) => word !== "").join(" "))
+    JSON.stringify(liveWords.filter((word) => word !== "").join(" ")),
   );
 
   const isButtonLoading = useSelector(
-    (state) => state.loadingReducer.isButtonLoading
+    (state) => state.loadingReducer.isButtonLoading,
   );
 
   const [variantchange, setVariantchange] = useState("outlined");
@@ -151,14 +151,14 @@ const DescriptionCard = ({
   const [currentLessonIndex, setCurrentLessonIndex] = useState(lessonIndex);
 
   const moduleData = useSelector(
-    (state) => state.persistData.lessonModuleReducer.data
+    (state) => state.persistData.lessonModuleReducer.data,
   );
 
   const searchTopic = useSelector(
-    (state) => state.persistData.moduleData.searchData
+    (state) => state.persistData.moduleData.searchData,
   );
   const lessonDatas = useSelector(
-    (state) => state.viewLessonReducer.viewLesson
+    (state) => state.viewLessonReducer.viewLesson,
   );
 
   const [nextLesonData, setNextLessonData] = useState({
@@ -196,7 +196,7 @@ const DescriptionCard = ({
     nextLessonTitle(nextLessonData);
 
     // const ws = new WebSocket("ws://localhost:8081");
-    const ws = new WebSocket(`wss://${serverAddress1}`);
+    const ws = new WebSocket(`${serverAddress1}`);
     let isWebSocketCompleted = false;
 
     ws.onmessage = (event) => {
@@ -257,10 +257,10 @@ const DescriptionCard = ({
       setCurrentLessonIndex((prev) => prev + 1);
       sendLessonDataToAPI(
         moduleData.find((module) => module.Title === lessonDatas).Chapters[
-        nextLessonIndex
+          nextLessonIndex
         ],
         nextLessonIndex,
-        moduleData
+        moduleData,
       );
     } else {
       toast.info("Congrats! This was the last chapter in this lesson.", {
@@ -451,12 +451,12 @@ const DescriptionCard = ({
               isMobile
                 ? { ...mobile.button, margin: "8px", marginLeft: "12px" }
                 : {
-                  margin: "8px",
-                  ":hover": {
-                    backgroundColor: "black",
-                    color: "white",
-                  },
-                }
+                    margin: "8px",
+                    ":hover": {
+                      backgroundColor: "black",
+                      color: "white",
+                    },
+                  }
             }
             onClick={quizOnClickHandler}
           >
@@ -490,11 +490,11 @@ const DescriptionCard = ({
             sx={
               isMobile
                 ? {
-                  ...mobile.buttonsWrapper,
-                  justifyContent: "center",
-                  width: "78%",
-                  marginTop: "4px",
-                }
+                    ...mobile.buttonsWrapper,
+                    justifyContent: "center",
+                    width: "78%",
+                    marginTop: "4px",
+                  }
                 : { ...style.buttonsWrapper, justifyContent: "center" }
             }
           >

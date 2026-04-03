@@ -1,9 +1,7 @@
 const dotenv = require("dotenv");
 const path = require("path");
 const Joi = require("joi");
-
 dotenv.config({ path: path.join(__dirname, "../../.env") });
-
 const envVarsSchema = Joi.object()
   .keys({
     NODE_ENV: Joi.string()
@@ -11,7 +9,7 @@ const envVarsSchema = Joi.object()
       .required(),
     PORT: Joi.number(),
     SOCKET_PORT: Joi.number(),
-    OPENAI_KEY: Joi.string(),
+    GOOGLE_API_KEY: Joi.string(),
     MONGODB_URL: Joi.string().description("Mongo DB url"),
     JWT_SECRET: Joi.string().description("JWT secret key"),
     JWT_ACCESS_EXPIRATION_MINUTES: Joi.number()
@@ -31,7 +29,7 @@ const envVarsSchema = Joi.object()
     SMTP_USERNAME: Joi.string().description("username for email server"),
     SMTP_PASSWORD: Joi.string().description("password for email server"),
     EMAIL_FROM: Joi.string().description(
-      "the from field in the emails sent by the app"
+      "the from field in the emails sent by the app",
     ),
   })
   .unknown();
@@ -46,9 +44,10 @@ if (error) {
 
 module.exports = {
   env: envVars.NODE_ENV,
-  port: 8080,
-  socket_port: 8081,
-  openAIKey: envVars.OPENAI_KEY,
+  port: envVars.PORT || 8080,
+  socket_port: envVars.SOCKET_PORT || 8081,
+  googleApiKey: envVars.GOOGLE_API_KEY,
+  openaiKey: envVars.OPENAI_KEY,
   mongoose: {
     url: envVars.MONGODB_URL + (envVars.NODE_ENV === "test" ? "-test" : ""),
     options: {

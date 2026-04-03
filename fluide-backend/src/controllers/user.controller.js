@@ -6,24 +6,25 @@ const openai = require("../config/chatgpt");
 const ApiError = require("../utils/ApiError");
 const httpStatus = require("http-status");
 const config = require("../config/config");
-let { OpenAI } = require("langchain/llms/openai");
+// let { OpenAI } = require("langchain/llms/openai");
+let { ChatGoogleGenerativeAI } = require("@langchain/google-genai");
 let {
-  HumanChatMessage,
-  AIChatMessage,
-  SystemChatMessage,
-} = require("langchain/schema");
-const { ChatOpenAI } = require("langchain/chat_models/openai");
+  SystemMessage,
+  HumanMessage,
+  AIMessage,
+} = require("@langchain/core/messages");
 const { CallbackManager } = require("langchain/callbacks");
 
 const getModule = catchAsync(async (req, res) => {
   const response = await userService.getModule(req.body);
-  const validJsonString = response.text.replace(/'/g, '"');
+  console.log("Raw response from getModule:", response); // Log the raw response
+  const validJsonString = response.content.replace(/'/g, '"');
   res.json({ status: 200, data: { modules: JSON.parse(validJsonString) } });
 });
 
 const getLessons = catchAsync(async (req, res) => {
   const response = await userService.getLessons(req.body);
-  const validJsonString = response.text.replace(/'/g, '"');
+  const validJsonString = response.content.replace(/'/g, '"');
   res.json({ status: 200, data: { lessons: JSON.parse(validJsonString) } });
 });
 
@@ -31,9 +32,8 @@ const getDescription = catchAsync(async (data, callbacks) => {
   try {
     const { module_name, level, language, lesson_name, topic } = data;
     const chapter = data.activity_name;
-
     const prompt_template = [
-      new SystemChatMessage(`You are an intelligent tutor who is an expert in any academic or professional topic that your student wants to learn about. 
+      new SystemMessage(`You are an intelligent tutor who is an expert in any academic or professional topic that your student wants to learn about. 
 
       When you teach, your educational content is of the highest quality, most often combining concepts, theories, facts, and information that give the full picture of the topic to your student. 
       
@@ -72,50 +72,36 @@ const getDescription = catchAsync(async (data, callbacks) => {
       You will stay objective, and since you are an expert in the topic, you will stay confident in your answers.
       
       If you understand, say OK.`),
-      new AIChatMessage("OK"),
-      new HumanChatMessage(
+      new AIMessage("OK"),
+      new HumanMessage(
         `Topic: ${topic} 
         Module: ${module_name} 
         Lesson: ${lesson_name} 
         Chapter: ${chapter} 
         Student’s Level: ${level} 
-        Student’s Language: ${language}`
+        Student’s Language: ${language}`,
       ),
     ];
-    // res.writeHead(200, {
-    //   "Content-Type": "text/event-stream",
-    //   "Connection": "keep-alive",
-    //   "Cache-Control": "no-cache"
-    // });
 
     let word = 0,
       space = 0;
-
-    const chat2_s = new ChatOpenAI({
-      modelName: "gpt-3.5-turbo",
+    const apiKey = config.googleApiKey;
+    const chat2_s = new ChatGoogleGenerativeAI({
+      modelName: "gemini-1.5-flash",
       temperature: 0.6,
-      openAIApiKey: config.openAIKey,
-      streaming: true,
-      callbackManager: CallbackManager.fromHandlers({
-        async handleLLMNewToken(token) {
-          // if (token.trim() === '(empty)') {
-          // } else {
-          //   if (token == "\n" || token == "\n\n" || token == " " || token == "  " || token == "   " || token == "    ") {
-          //     space++;
-          //   } else if (token != "\n" || token == "\n\n" || token != " " || token !== "  " || token != "   ") {
-          //     word = 1;
-          //     space = 0;
-          //   }
-          //   if (space <= 2 && word !== 0) {
-          //     callbacks(null, token);
-          //   }
-          // }
-          callbacks(null, token);
-        },
-      }),
+      apiKey: apiKey,
     });
+    const response = await chat2_s.call(prompt_template);
+    callbacks(null, "asdasdasdsad");
+    // const stream = await chat2_s.invoke(prompt_template);
 
-    await chat2_s.call(prompt_template);
+    // for await (const chunk of stream) {
+    //   const token = chunk.content;
+    //   if (token) {
+    //     // Send the token back to the WebSocket via the callback
+    //     callbacks(null, token);
+    //   }
+    // }
   } catch (err) {
     console.error("Error occurred during stream.", err);
     callbacks(err, null);
@@ -124,7 +110,7 @@ const getDescription = catchAsync(async (data, callbacks) => {
 
 const getQuiz = catchAsync(async (req, res) => {
   const response = await userService.getQuiz(req.body);
-  const validJsonString = response.text.replace(/'/g, '"');
+  const validJsonString = response.content.replace(/'/g, '"');
   res.json({ status: 200, data: JSON.parse(validJsonString) });
 });
 
@@ -231,7 +217,7 @@ const askQuestion = catchAsync(async (req, res) => {
       max_tokens: 4000,
       stream: true,
     },
-    { responseType: "stream" }
+    { responseType: "stream" },
   );
 
   res.writeHead(200, {
@@ -254,7 +240,7 @@ const askQuestion = catchAsync(async (req, res) => {
       }
       try {
         const parsed = JSON.parse(message);
-        if (parsed.choices[0].text.trim() === "(empty)") {
+        if (parsed.choices[0].content.trim() === "(empty)") {
         } else {
           if (
             parsed.choices[0].text == "\n" ||
@@ -298,7 +284,7 @@ const getExample = catchAsync(async (data, callbacks) => {
     new AIChatMessage(
       `Text: ${text} 
     Student's Level: ${level} 
-    Student's Language: ${language}`
+    Student's Language: ${language}`,
     ),
     new SystemChatMessage(`You have been provided the text above, along with the student’s level and language.
        

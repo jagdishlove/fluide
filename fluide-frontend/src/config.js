@@ -1,3 +1,3 @@
-const serverAddress = "https://www.fluide.ai/api";
-const serverAddress1 = "www.fluide.ai/ws";
+const serverAddress = "http://localhost:8080";
+const serverAddress1 = "ws://localhost:8081";
 export { serverAddress, serverAddress1 };

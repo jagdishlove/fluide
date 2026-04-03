@@ -32,17 +32,17 @@ const Example = ({
   const descriptionText = JSON.parse(localStorage.getItem("description"));
 
   const fetchStreamData = useSelector(
-    (state) => state?.persistData?.lessonModuleReducer?.lessonData
+    (state) => state?.persistData?.lessonModuleReducer?.lessonData,
   );
 
   const searchTopic = useSelector(
-    (state) => state.persistData.moduleData.searchData
+    (state) => state.persistData.moduleData.searchData,
   );
   const showExampleSSE = () => {
     const nextLessonData = JSON.parse(localStorage.getItem("nextLessonData"));
 
     let eventSource;
-    const ws = new WebSocket(`wss://${serverAddress1}`);
+    const ws = new WebSocket(`${serverAddress1}`);
 
     if (levelType) {
       ws.onmessage = (event) => {

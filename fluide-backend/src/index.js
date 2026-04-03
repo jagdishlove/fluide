@@ -50,45 +50,31 @@ wss.on("connection", function (ws) {
     data = JSON.parse(data);
     switch (data.type) {
       case "description":
-        userController.getDescription(data.payload, function (err, response) {
-          let word = 0;
-          if (word == 0 && (response == "" || response == " ")) {
+        userController.getDescription(data.payload, function (err, token) {
+          console.log(
+            "[WebSocket:description] Callback invoked. err=",
+            err,
+            ", token=",
+            token,
+          );
+          if (err) {
+            console.error("Gemini streaming error (callback):", err);
+            ws.send(
+              JSON.stringify({ type: "error", error: err?.message || err }),
+            );
+            return;
+          }
+          if (typeof token === "string" && token.trim() !== "") {
+            ws.send(JSON.stringify({ type: "description", token }));
+          } else if (token === null || token === undefined) {
+            console.warn(
+              "[WebSocket:description] Received null/undefined token from Gemini callback.",
+            );
           } else {
-            if (
-              response != "##" ||
-              response != "###" ||
-              response != " ##" ||
-              response != " ###"
-            ) {
-              word = 1;
-              if (response == ".\n\n") {
-                ws.send(JSON.stringify("."));
-                ws.send(JSON.stringify(""));
-                ws.send(JSON.stringify(""));
-              } else {
-                if (
-                  response == "##" ||
-                  response == "###" ||
-                  response == " ##" ||
-                  response == " ###"
-                ) {
-                } else if (response == ".\n\n") {
-                  ws.send(JSON.stringify("."));
-                  ws.send(JSON.stringify(""));
-                  ws.send(JSON.stringify(""));
-                } else if (response == "\n\n") {
-                  ws.send(JSON.stringify(""));
-                  ws.send(JSON.stringify(""));
-                } else if (response.includes("\n\n")) {
-                  let parts = response.split(/(\n\n)/);
-                  ws.send(JSON.stringify(parts[0]));
-                  ws.send(JSON.stringify(""));
-                  ws.send(JSON.stringify(""));
-                } else {
-                  ws.send(JSON.stringify(response));
-                }
-              }
-            }
+            console.warn(
+              "[WebSocket:description] Received non-string token:",
+              token,
+            );
           }
         });
         break;

@@ -6,51 +6,52 @@ const httpStatus = require("http-status");
 const tokenService = require("./token.service");
 const bcrypt = require("bcryptjs");
 const emailService = require("./email.service");
-let { ChatOpenAI } = require("langchain/chat_models/openai");
+let { ChatGoogleGenerativeAI } = require("@langchain/google-genai");
 let {
-  HumanChatMessage,
-  AIChatMessage,
-  SystemChatMessage,
-} = require("langchain/schema");
+  SystemMessage,
+  HumanMessage,
+  AIMessage,
+} = require("@langchain/core/messages");
 
-const chat1 = new ChatOpenAI({
+const chat1 = new ChatGoogleGenerativeAI({
+  apiKey: config.googleApiKey,
+  model: "gemini-2.5-flash",
   temperature: 0,
-  openAIApiKey: config.openAIKey,
-  modelName: "gpt-3.5-turbo",
+  maxRetries: 2,
 });
-const chat2 = new ChatOpenAI({
+const chat2 = new ChatGoogleGenerativeAI({
+  apiKey: config.googleApiKey,
+  model: "gemini-pro",
   temperature: 0.6,
-  openAIApiKey: config.openAIKey,
-  modelName: "gpt-3.5-turbo",
 });
-const chat3 = new ChatOpenAI({
+const chat3 = new ChatGoogleGenerativeAI({
+  apiKey: config.googleApiKey,
+  model: "gemini-pro",
   temperature: 0.8,
-  openAIApiKey: config.openAIKey,
-  modelName: "gpt-3.5-turbo",
 });
 
 const getModule = async (data) => {
   const { topic, level, language } = data;
   try {
-    response = await chat1.call([
-      new SystemChatMessage(`You are an intelligent tutor who is an expert in any academic or professional topic that your student wants to learn about. 
-  
-     When you teach, your educational content is of the highest quality, most often combining concepts, theories, facts, and information that give the full picture of the topic to your student. 
-     
+    const response = await chat1.invoke([
+      new SystemMessage(`You are an intelligent tutor who is an expert in any academic or professional topic that your student wants to learn about.
+
+     When you teach, your educational content is of the highest quality, most often combining concepts, theories, facts, and information that give the full picture of the topic to your student.
+
      You can write educational content in 10 languages: English, Mandarin, Hindi, Spanish, French, Arabic, Bengali, Portuguese, German, and Japanese.
-     
+
      You can adapt your educational content and the vocabulary you use to the level of the student. You can use different teaching techniques to best communicate with your student based on 3 proficiency levels: beginner, intermediate, or advanced.
-     
+
      You will be provided with an academic or professional topic, the student’s level, and the student’s language, in the following format:
      Topic: …
      Student’s Level: …
      Student’s Language: …
-     
-     Your task is to generate a list of every relevant module that the topic is comprised of. You will use vocabulary that is adapted to the student’s level. You will write your answer in the student’s language. 
+
+     Your task is to generate a list of every relevant module that the topic is comprised of. You will use vocabulary that is adapted to the student’s level. You will write your answer in the student’s language.
      The modules you generate must represent all the main branches of that topic.
-     
+
      In order to provide an excellent answer, you will follow the below list of requirements between triple hashtags, exactly as they are listed. Before providing your answer, check that all requirements within the following list have been satisfied.
-     
+
      Requirements:
      ###
      - Generate between 6 and 8 modules for the topic, not less, not more. The broader the topic, the larger the number of modules should be.
@@ -58,37 +59,63 @@ const getModule = async (data) => {
      - Adapt the ideas and vocabulary you use in your answer to the student’s level indicated.
      - The modules generated should be distinct from each other and not repetitive.
      - Each module consists of a title and a description.
-     - Each module’s title must be clear and concise. It can either be 1 word or a very short sentence, but the shorter, the better. 
+     - Each module’s title must be clear and concise. It can either be 1 word or a very short sentence, but the shorter, the better.
      - Each module’s description must be a clear and concise summary of what the student will learn about in that specific module.
-     - Each module’s description must be at least 10 words long and at most 80 words long. 
+     - Each module’s description must be at least 10 words long and at most 80 words long.
      - Your answer should only contain the modules' titles and descriptions, nothing else.
      - In your answer, do not include any character that would result in the following error: "Unexpected token in JSON". Therefore, you must absolutely avoid any character that is not allowed in JSON, such as "#" and "]".
      - Provide your answer in the format below.
      Format of Answer:
      [{'Title': <module_title>, {{'Description': <description>}}}, ..., {'Title': <module_title>, {{'Description': <description>}}}]
      ###
-     
+
      You will stay objective, and since you are an expert in the topic, you will stay confident in your answers.
-     
+
      If you understand, say OK.`),
-      new AIChatMessage("OK"),
-      new HumanChatMessage(
-        `Topic: ${topic} 
-      Student’s Level: ${level} 
+      new AIMessage("OK"),
+      new HumanMessage(
+        `Topic: ${topic}
+      Student’s Level: ${level}
       Student’s Language: ${language}`,
       ),
     ]);
+    // const newResponse = {
+    //   content:
+    //     '[{"Title": "Hardware", "Description": "Learn about the physical parts of a computer like the screen and keyboard. You will also understand how programs tell the computer what to do."}, {"Title": "Algorithms", "Description": "Discover how to break down big problems into small steps. This module teaches you how to think like a computer to find solutions."}, {"Title": "Programming", "Description": "Start writing simple instructions for a computer. You will learn about variables, loops, and how to make your own basic programs."}, {"Title": "Data", "Description": "Explore how computers remember information using numbers and files. You will learn how data is organized so it can be found easily."}, {"Title": "Networks", "Description": "Find out how computers talk to each other across the world. This module explains how the internet works and how we share information."}, {"Title": "Security", "Description": "Learn how to protect your personal information and stay safe while using the internet. You will understand basic rules for digital security."}, {"Title": "Intelligence", "Description": "Get an introduction to exciting new tools like artificial intelligence. You will see how computers are learning to perform tasks like humans."}]',
+    //   additional_kwargs: {
+    //     finishReason: "STOP",
+    //     index: 0,
+    //     __gemini_function_call_thought_signatures__: {},
+    //   },
+    //   response_metadata: {
+    //     tokenUsage: {
+    //       promptTokens: 675,
+    //       completionTokens: 246,
+    //       totalTokens: 63834,
+    //     },
+    //     finishReason: "STOP",
+    //     index: 0,
+    //   },
+    //   tool_calls: [],
+    //   invalid_tool_calls: [],
+    //   usage_metadata: {
+    //     input_tokens: 675,
+    //     output_tokens: 246,
+    //     total_tokens: 63834,
+    //   },
+    // }; // Log the raw response from the model
+    return response;
   } catch (error) {
     console.error("Error in getModule:", error);
+    throw error;
   }
-  return response;
 };
 
 const getLessons = async (data) => {
   const { module_name, level, language, topic } = data;
 
-  const response = await chat1.call([
-    new SystemChatMessage(`You are an intelligent tutor who is an expert in any academic or professional topic that your student wants to learn about. 
+  const response = await chat1.invoke([
+    new SystemMessage(`You are an intelligent tutor who is an expert in any academic or professional topic that your student wants to learn about. 
   
       When you teach, your educational content is of the highest quality, most often combining concepts, theories, facts, and information that give the full picture of the topic to your student. 
       
@@ -128,8 +155,8 @@ const getLessons = async (data) => {
       You will stay objective, and since you are an expert in the topic, you will stay confident in your answers.
       
       If you understand, say OK.`),
-    new AIChatMessage("OK"),
-    new HumanChatMessage(
+    new AIMessage("OK"),
+    new HumanMessage(
       `Topic: ${topic} 
       Module: ${module_name}
       Student’s Level: ${level}
