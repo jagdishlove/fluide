@@ -12,3 +12,5 @@ yarn-error.log
 coverage
 
 logs
+docker.compose.yml
+repomix-output.xml

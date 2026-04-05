@@ -201,7 +201,7 @@ const DescriptionCard = ({
 
     ws.onmessage = (event) => {
       const receivedData = JSON.parse(event.data);
-      setLiveWords((prevData) => [...prevData, receivedData]);
+      setLiveWords((prevData) => [...prevData, receivedData.token]);
     };
 
     ws.onopen = (event) => {

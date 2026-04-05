@@ -1,4 +1,4 @@
-const { Configuration, OpenAIApi } = require("openai");
+const { z } = require("zod");
 const httpStatus = require("http-status");
 const bcrypt = require("bcryptjs");
 const { ChatGoogleGenerativeAI } = require("@langchain/google-genai");
@@ -13,11 +13,25 @@ const { User } = require("../models");
 const tokenService = require("./token.service");
 const emailService = require("./email.service");
 
+const getModuleSchema = z.object({
+  Title: z.string().describe("The name of the subject title"),
+  Description: z.string().describe("A clear explanation of how it works"),
+});
+
+const getLessonsSchema = z.object({
+  Title: z.string().describe("The name of the subject title"),
+  Chapters: z.array(z.string()).describe("A clear explanation of how it works"),
+});
+
+const ResponseSchema = z.array(getModuleSchema);
+const getLessonsResponseSchema = z.array(getLessonsSchema);
+
 const chat1 = new ChatGoogleGenerativeAI({
   apiKey: config.googleApiKey,
-  model: "gemini-2.5-flash",
+  model: "gemini-3.1-flash-lite-preview",
   temperature: 0,
-  maxRetries: 2,
+  maxRetries: 3,
+  max_tokens: -1,
 });
 const chat2 = new ChatGoogleGenerativeAI({
   apiKey: config.googleApiKey,
@@ -30,10 +44,13 @@ const chat3 = new ChatGoogleGenerativeAI({
   temperature: 0.8,
 });
 
+const getModuleChat = chat1.withStructuredOutput(ResponseSchema);
+const getLessonsChat = chat1.withStructuredOutput(getLessonsResponseSchema);
+
 const getModule = async (data) => {
   const { topic, level, language } = data;
   try {
-    const response = await chat1.invoke([
+    const response = await getModuleChat.invoke([
       new SystemMessage(`You are an intelligent tutor who is an expert in any academic or professional topic that your student wants to learn about.
 
      When you teach, your educational content is of the highest quality, most often combining concepts, theories, facts, and information that give the full picture of the topic to your student.
@@ -76,12 +93,12 @@ const getModule = async (data) => {
       new HumanMessage(
         `Topic: ${topic}
       Student’s Level: ${level}
-      Student’s Language: ${language}`
+      Student’s Language: ${language}`,
       ),
     ]);
     // const newResponse = {
     //   content:
-    //     '[{"Title": "Hardware", "Description": "Learn about the physical parts of a computer like the screen and keyboard. You will also understand how programs tell the computer what to do."}, {"Title": "Algorithms", "Description": "Discover how to break down big problems into small steps. This module teaches you how to think like a computer to find solutions."}, {"Title": "Programming", "Description": "Start writing simple instructions for a computer. You will learn about variables, loops, and how to make your own basic programs."}, {"Title": "Data", "Description": "Explore how computers remember information using numbers and files. You will learn how data is organized so it can be found easily."}, {"Title": "Networks", "Description": "Find out how computers talk to each other across the world. This module explains how the internet works and how we share information."}, {"Title": "Security", "Description": "Learn how to protect your personal information and stay safe while using the internet. You will understand basic rules for digital security."}, {"Title": "Intelligence", "Description": "Get an introduction to exciting new tools like artificial intelligence. You will see how computers are learning to perform tasks like humans."}]',
+    //     "[{'Title': 'Geography & People', 'Description': 'Learn about where the Philippines is located in Southeast Asia and the diverse groups of people who live across its many islands, understanding their basic identities.'}, {'Title': 'History Snapshot', 'Description': 'Discover the major events and influences that shaped the Philippines, from ancient times to the Spanish and American colonial periods, in a simple overview.'}, {'Title': 'Family & Community', 'Description': 'Explore the strong importance of family in Filipino life, including respect for elders, close-knit relationships, and the spirit of helping neighbors called \"bayanihan.\"'}, {'Title': 'Filipino Cuisine', 'Description': 'Get to know popular Filipino dishes like adobo and sinigang, common ingredients, and the significant role food plays in daily life and special celebrations.'}, {'Title': 'Festivals & Traditions', 'Description': 'Learn about the colorful fiestas, unique customs, and traditional celebrations that bring communities together with music, dance, and parades across the islands.'}, {'Title': 'Arts & Expressions', 'Description': 'Discover traditional Filipino music, folk dances, intricate crafts like weaving, and other creative ways Filipinos express their rich heritage and stories.'}, {'Title': 'Language & Communication', 'Description': 'Understand the national language, Filipino (based on Tagalog), learn some common phrases, and explore how Filipinos communicate and interact with each other.'}]",
     //   additional_kwargs: {
     //     finishReason: "STOP",
     //     index: 0,
@@ -89,9 +106,9 @@ const getModule = async (data) => {
     //   },
     //   response_metadata: {
     //     tokenUsage: {
-    //       promptTokens: 675,
-    //       completionTokens: 246,
-    //       totalTokens: 63834,
+    //       promptTokens: 676,
+    //       completionTokens: 289,
+    //       totalTokens: 1565,
     //     },
     //     finishReason: "STOP",
     //     index: 0,
@@ -99,11 +116,11 @@ const getModule = async (data) => {
     //   tool_calls: [],
     //   invalid_tool_calls: [],
     //   usage_metadata: {
-    //     input_tokens: 675,
-    //     output_tokens: 246,
-    //     total_tokens: 63834,
+    //     input_tokens: 676,
+    //     output_tokens: 289,
+    //     total_tokens: 1565,
     //   },
-    // }; // Log the raw response from the model
+    // };
     return response;
   } catch (error) {
     console.error("Error in getModule:", error);
@@ -114,7 +131,7 @@ const getModule = async (data) => {
 const getLessons = async (data) => {
   const { module_name, level, language, topic } = data;
 
-  const response = await chat1.invoke([
+  const response = await getLessonsChat.invoke([
     new SystemMessage(`You are an intelligent tutor who is an expert in any academic or professional topic that your student wants to learn about. 
   
       When you teach, your educational content is of the highest quality, most often combining concepts, theories, facts, and information that give the full picture of the topic to your student. 
@@ -160,9 +177,10 @@ const getLessons = async (data) => {
       `Topic: ${topic} 
       Module: ${module_name}
       Student’s Level: ${level}
-      Student’s Language: ${language}`
+      Student’s Language: ${language}`,
     ),
   ]);
+
   return response;
 };
 
@@ -292,20 +310,20 @@ const login = async (data) => {
   if (!userExist) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
-      "Please enter a valid email address and password."
+      "Please enter a valid email address and password.",
     );
   } else {
     if (userExist.isVerified == false) {
       throw new ApiError(
         httpStatus.BAD_REQUEST,
-        "Please verify your account before proceeding."
+        "Please verify your account before proceeding.",
       );
     }
     const valid = bcrypt.compareSync(data.password, userExist.password);
     if (!valid) {
       throw new ApiError(
         httpStatus.BAD_REQUEST,
-        "Please enter a valid email address and password."
+        "Please enter a valid email address and password.",
       );
     } else {
       const token = await tokenService.generateAuthTokens(userExist);
@@ -349,7 +367,7 @@ const loginSucess = async (userData) => {
 const verifyEmail = async (data) => {
   const user = await User.findOneAndUpdate(
     { _id: data.id },
-    { isVerified: true }
+    { isVerified: true },
   );
   return user;
 };
@@ -360,7 +378,7 @@ const changePassword = async (data, user) => {
   if (!valid) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
-      "Please enter the correct old password."
+      "Please enter the correct old password.",
     );
   } else {
     const salt = bcrypt.genSaltSync(10);
@@ -389,7 +407,7 @@ const resetPassword = async (data) => {
   if (!userExist) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
-      "The email you provided doesn't exist with us."
+      "The email you provided doesn't exist with us.",
     );
   }
   const randomString = generateRandomString(10);
@@ -398,7 +416,7 @@ const resetPassword = async (data) => {
   await emailService.sendResetPasswordEmail(data.email, randomString);
   await User.findOneAndUpdate(
     { email: data.email },
-    { password: hashPassword }
+    { password: hashPassword },
   );
   return userExist;
 };
