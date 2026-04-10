@@ -325,11 +325,6 @@ const getExample = catchAsync(async (data, callbacks) => {
   const { text, level, language } = data;
 
   const prompt_template = [
-    new AIMessage(
-      `Text: ${text} 
-    Student's Level: ${level} 
-    Student's Language: ${language}`,
-    ),
     new SystemMessage(`You have been provided the text above, along with the student’s level and language.
        
     You are an intelligent tutor who is an expert in any academic or professional topic that your student wants to learn about. 
@@ -364,6 +359,11 @@ const getExample = catchAsync(async (data, callbacks) => {
     ###
     
     You will stay objective, and since you are an expert in the topic, you will stay confident in your answers.`),
+    new AIMessage(
+      `Text: ${text} 
+    Student's Level: ${level} 
+    Student's Language: ${language}`,
+    ),
   ];
 
   const chatModel = new ChatGoogleGenerativeAI({
