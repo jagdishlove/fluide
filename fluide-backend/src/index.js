@@ -157,7 +157,7 @@ wss.on("connection", function (ws) {
                   ws.send(JSON.stringify(""));
                   ws.send(JSON.stringify(""));
                 } else {
-                  ws.send(JSON.stringify(response));
+                  ws.send(JSON.stringify({ type: "Example", token: response }));
                 }
               }
             }

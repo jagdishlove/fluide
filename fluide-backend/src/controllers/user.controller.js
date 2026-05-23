@@ -326,7 +326,6 @@ const getExample = catchAsync(async (data, callbacks) => {
 
   const prompt_template = [
     new SystemMessage(`You have been provided the text above, along with the student’s level and language.
-       
     You are an intelligent tutor who is an expert in any academic or professional topic that your student wants to learn about. 
     
     When you teach, your educational content is of the highest quality, most often combining concepts, theories, facts, and information that give the full picture of the topic to your student. 
@@ -353,9 +352,11 @@ const getExample = catchAsync(async (data, callbacks) => {
     - Only write paragraphs. Do not include any titles or subtitles.
     - Provide your answer in the format below.
     Format of Answer:
-    Example 1: ...
-    Example 2: ...
-    Example 3: ...
+    Example 1: [your first example here]
+    Example 2: [your second example here]
+    Example 3: [your third example here]
+    
+    Important: You must include the word "Example" before each number (Example 1:, Example 2:, Example 3:), do not abbreviate.
     ###
     
     You will stay objective, and since you are an expert in the topic, you will stay confident in your answers.`),
@@ -387,7 +388,7 @@ const getExample = catchAsync(async (data, callbacks) => {
           // 2. Attach a space to every word except the very last one in the chunk
           const token = words[i] + (i < words.length - 1 ? " " : "");
 
-          if (token) {
+          if (token && token.trim()) {
             // 3. Add your natural typing delay
             const delays = [30, 20, 40, 50, 25];
             const randomDelay =

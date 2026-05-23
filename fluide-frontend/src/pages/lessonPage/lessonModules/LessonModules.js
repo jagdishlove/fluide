@@ -44,11 +44,11 @@ const LessonModules = ({ onClick, handlerClick }) => {
                       alignItems: "center",
                       justifyContent: "center",
                       width:
-                        lesson.Title.length <= 20 // Check the length of the title string
+                        lesson.Title.length <= 20
                           ? isMobile
                             ? "300px"
-                            : "400px" // Set width to 400px if title is short
-                          : "", // Otherwise set width to 100%
+                            : "400px"
+                          : "",
                     }}
                   >
                     <LazyLoadImage

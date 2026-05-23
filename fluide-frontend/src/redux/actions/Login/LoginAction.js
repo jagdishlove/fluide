@@ -60,7 +60,7 @@ export const userLogin = (data) => {
 };
 export const googleLoginAction = () => {
   return async (dispatch) => {
-    window.open(`https://localhost:8080/api/auth/google/callback`, "_self");
+    window.open(`${serverAddress}/auth/google/`, "_self");
   };
 };
 

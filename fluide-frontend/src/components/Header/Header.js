@@ -51,27 +51,45 @@ const Header = () => {
     >
       <Container maxWidth="xl">
         <Toolbar sx={{ justifyContent: "space-between" }}>
-          <Box>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 4 }}>
             <LazyLoadImage
               style={{ cursor: "pointer" }}
               onClick={() => {
                 navigate("/");
-                dispatch(cleanUpDataAction());
               }}
               src={logo}
               alt="logo"
             />
+            <Typography
+              variant="body1"
+              sx={{
+                cursor: "pointer",
+                fontWeight: 500,
+                display: { xs: "none", md: "block" },
+                "&:hover": { color: "#6C8EA5" },
+              }}
+              onClick={() => navigate("/dashboard")}
+            >
+              Dashboard
+            </Typography>
           </Box>
           <Box>
             {!userData ? (
-              <Button
-                sx={styles.loginBtn}
-                variant="contained"
-                onClick={() => navigate("/login")}
-                startIcon={<img src={loginIcon} alt="Login" />}
-              >
-                Sign In
-              </Button>
+              <Box sx={{ display: "flex", gap: 2 }}>
+                <Button
+                  sx={{ textTransform: "none", color: "black" }}
+                  onClick={() => navigate("/login")}
+                >
+                  Sign In
+                </Button>
+                <Button
+                  sx={styles.loginBtn}
+                  variant="contained"
+                  onClick={() => navigate("/dashboard")}
+                >
+                  Get Started
+                </Button>
+              </Box>
             ) : (
               <Box>
                 <HeaderPopOver />
@@ -83,5 +101,6 @@ const Header = () => {
     </AppBar>
   );
 };
+
 
 export default Header;

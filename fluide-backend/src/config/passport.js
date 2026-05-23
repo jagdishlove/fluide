@@ -1,9 +1,8 @@
 const { Strategy: JwtStrategy, ExtractJwt } = require("passport-jwt");
-const config = require("./config");
-const { tokenTypes } = require("./tokens");
-const { User } = require("../models");
-const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const passport = require("passport");
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
+const config = require("./config");
+const { User } = require("../models");
 
 const jwtOptions = {
   secretOrKey: config.jwt.secret,
@@ -28,13 +27,13 @@ passport.use(
     {
       clientID: process.env.CLIENT_ID,
       clientSecret: process.env.CLIENT_SECRET,
-      callbackURL: "https://localhost:8080/api/auth/google/callback",
+      callbackURL: "http://localhost:8080/api/auth/google/callback",
       scope: ["profile", "email"],
     },
     function (accessToken, refreshToken, profile, callback) {
       callback(null, profile);
-    }
-  )
+    },
+  ),
 );
 
 passport.serializeUser((user, done) => {

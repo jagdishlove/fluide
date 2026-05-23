@@ -14,8 +14,9 @@ import currentPageReducer from "./reducers/currentPageReducer";
 const persistConfig = {
   key: "root",
   storage,
-  blacklist: ["loadingReducer", "quizDataReducer"],
+  blacklist: ["loadingReducer", "quizDataReducer", "viewLessonReducer"],
 };
+
 const logger = createLogger();
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
