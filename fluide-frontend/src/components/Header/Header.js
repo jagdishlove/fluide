@@ -79,7 +79,6 @@ const Header = () => {
             }}
           ></Box>
 
-          {/* Right: auth / popover */}
           <Box sx={{ display: "flex", alignItems: "center" }}>
             {!userData ? (
               <Box sx={{ display: "flex", gap: 2 }}>
