@@ -7,6 +7,29 @@ export const style = {
     padding: { xs: "60px 0", md: "100px 0" },
     textAlign: "center",
   },
+  heroTitle: {
+    fontSize: { xs: "2.5rem", md: "4rem" },
+    fontWeight: 800,
+    lineHeight: 1.2,
+    mb: 3,
+  },
+  heroSubTitle: {
+    fontSize: { xs: "1.1rem", md: "1.5rem" },
+    color: "#666",
+    maxWidth: "800px",
+    margin: "0 auto",
+    lineHeight: 1.6,
+    fontWeight: 400,
+  },
+  gradientText: {
+    background: "linear-gradient(45deg, #000000 30%, #6C8EA5 90%)",
+    WebkitBackgroundClip: "text",
+    WebkitTextFillColor: "transparent",
+  },
+  ctaBtn: {
+    minWidth: "250px",
+    borderRadius: "50px",
+  },
   featuresSection: {
     backgroundColor: "#ffffff",
     padding: { xs: "80px 0", md: "100px 0" },
@@ -15,16 +38,47 @@ export const style = {
     display: "grid",
     gridTemplateColumns: {
       xs: "1fr",
-      md: "repeat(2, minmax(0, 1fr))",
-      lg: "repeat(3, 320px)",
+      md: "repeat(3, minmax(0, 320px))",
     },
-    gap: { xs: 3, md: 4 },
+    gap: 4,
     justifyContent: "center",
-    alignItems: "stretch",
   },
-  featureGridItem: {
+  featureCard: {
+    padding: "32px 28px",
+    backgroundColor: "#fff",
+    borderRadius: "20px",
+    height: "100%",
+    border: "1px solid #f1f5f9",
+    transition: "all 0.3s ease",
     display: "flex",
+    flexDirection: "column",
+    "&:hover": {
+      transform: "translateY(-8px)",
+      boxShadow: "0px 12px 30px rgba(0,0,0,0.06)",
+      borderColor: "#cbd5e1",
+    },
+  },
+  iconWrapper: {
+    width: "56px",
+    height: "56px",
+    borderRadius: "12px",
+    backgroundColor: "#f8fafc",
+    display: "flex",
+    alignItems: "center",
     justifyContent: "center",
+    mb: 3,
+  },
+  featureTitle: {
+    fontSize: "1.25rem",
+    fontWeight: 700,
+    mb: 1.5,
+    color: "#0f172a",
+  },
+  featureDescription: {
+    fontSize: "0.95rem",
+    lineHeight: 1.6,
+    color: "#475569",
+    flexGrow: 1,
   },
   howItWorks: {
     backgroundColor: "#fcfcfc",
@@ -55,14 +109,6 @@ export const style = {
     textAlign: "center",
     position: "relative",
     overflow: "hidden",
-    "&::before": {
-      content: '""',
-      position: "absolute",
-      inset: 0,
-      background:
-        "linear-gradient(135deg, rgba(108, 142, 165, 0.08) 0%, rgba(255, 255, 255, 0) 55%)",
-      pointerEvents: "none",
-    },
   },
   footerCtaContent: {
     position: "relative",
@@ -105,54 +151,5 @@ export const style = {
     minWidth: { xs: "100%", sm: "280px" },
     borderRadius: "999px",
     boxShadow: "0px 16px 30px rgba(108, 142, 165, 0.28)",
-  },
-
-  heroTitle: {
-    fontSize: { xs: "2.5rem", md: "4rem" },
-    fontWeight: 800,
-    lineHeight: 1.2,
-    mb: 3,
-  },
-  heroSubTitle: {
-    fontSize: { xs: "1.1rem", md: "1.5rem" },
-    color: "#666",
-    maxWidth: "800px",
-    margin: "0 auto",
-    lineHeight: 1.6,
-    fontWeight: 400,
-  },
-  gradientText: {
-    background: "linear-gradient(45deg, #000000 30%, #6C8EA5 90%)",
-    WebkitBackgroundClip: "text",
-    WebkitTextFillColor: "transparent",
-  },
-  ctaBtn: {
-    minWidth: "250px",
-    borderRadius: "50px",
-  },
-  featureCard: {
-    padding: "18px 40px",
-    backgroundColor: "#fff",
-    width: "100%",
-
-    borderRadius: "24px",
-
-    border: "1px solid #f0f0f0",
-    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-    "&:hover": {
-      transform: "translateY(-12px)",
-      boxShadow: "0px 20px 40px rgba(0,0,0,0.08)",
-      borderColor: "#000",
-    },
-  },
-  iconWrapper: {
-    width: "70px",
-    height: "70px",
-    borderRadius: "16px",
-    backgroundColor: "#f5f7f9",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    mb: 4,
   },
 };

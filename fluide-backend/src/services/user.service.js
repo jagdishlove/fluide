@@ -23,8 +23,27 @@ const getLessonsSchema = z.object({
   Chapters: z.array(z.string()).describe("A clear explanation of how it works"),
 });
 
+const quizAnswerSchema = z
+  .array(z.string())
+  .min(2)
+  .max(2)
+  .describe("Array with [answer text, explanation]");
+
+const quizAnswersSchema = z.object({
+  "Answer 1": quizAnswerSchema,
+  "Answer 2": quizAnswerSchema,
+  "Answer 3": quizAnswerSchema,
+  "Answer 4": quizAnswerSchema,
+});
+
+const quizQuestionSchema = z.object({
+  Question: z.string().describe("Quiz question text"),
+  Answers: quizAnswersSchema,
+});
+
 const ResponseSchema = z.array(getModuleSchema);
 const getLessonsResponseSchema = z.array(getLessonsSchema);
+const getQuizResponseSchema = z.array(quizQuestionSchema).length(3);
 
 const chat1 = new ChatGoogleGenerativeAI({
   apiKey: config.googleApiKey,
@@ -46,6 +65,7 @@ const chat3 = new ChatGoogleGenerativeAI({
 
 const getModuleChat = chat1.withStructuredOutput(ResponseSchema);
 const getLessonsChat = chat1.withStructuredOutput(getLessonsResponseSchema);
+const getQuizChat = chat1.withStructuredOutput(getQuizResponseSchema);
 
 const getModule = async (data) => {
   const { topic, level, language } = data;
@@ -187,13 +207,8 @@ const getLessons = async (data) => {
 const getQuiz = async (data) => {
   const { description, level, language } = data;
 
-  const response = await chat3.call([
-    new AIChatMessage(`
-        Text: ${description}
-        Student's Level: ${level}
-        Student's Language: ${language}
-        `),
-    new SystemChatMessage(`You now have the text above, along with the student’s level and language.
+  const response = await getQuizChat.invoke([
+    new SystemMessage(`You now have the source text, along with the student's level and language.
 
         You are an intelligent tutor who is an expert in any academic or professional topic that your student wants to learn about. 
         
@@ -204,9 +219,10 @@ const getQuiz = async (data) => {
         You can adapt your educational content and the vocabulary you use to the level of the student. You can use different teaching techniques to best communicate with your student based on 3 proficiency levels: beginner, intermediate, or advanced.
         
         Your tasks are to:
-        1. Generate 3 quiz questions at the student's level and in the student's language based on the text you have been provided with.
-        2. Generate 4 possible answers for each quiz question, the first one is the correct answer, and the remaining three answers are incorrect.
-        3. Generate a thorough explanation for each possible answer outlining why it is correct or incorrect.
+        1. Generate exactly 3 quiz questions at the student's level and in the student's language based on the provided text.
+        2. Generate exactly 4 possible answers for each quiz question.
+        3. Ensure the first answer is the correct one and the remaining three answers are incorrect.
+        4. Generate a thorough explanation for each possible answer outlining why it is correct or incorrect.
         
         Requirements:
         - Each quiz question should be related to a concept or idea from the text.
@@ -216,28 +232,13 @@ const getQuiz = async (data) => {
         - Each possible answer should be at the student's level.
         - Each possible answer must be at most 30 words long.
         - Each explanation should be thorough and be between 15 and 50 words, expanding on the reason(s) why the answer is correct or incorrect.
-        - In your answer, do not include any character that would result in the following error: "Unexpected token in JSON". Therefore, you must absolutely avoid any character that is not allowed in JSON, such as "#" and "]".
-        - Provide your answer in the format below.
-        Format of Answer in JSON:
-        [{'Question 1': <question>, 
-        'Answers': {
-        'Answer 1': [<correct_answer>, <'This answer is correct because...'>], 
-        'Answer 2': [<incorrect_answer>, <'This answer is incorrect because...'>],
-        'Answer 3': [<incorrect_answer>, <'This answer is incorrect because...'>],
-        'Answer 4': [<incorrect_answer>, <'This answer is incorrect because...'>]}},
-         {'Question 2': <question>, 
-        'Answers': {
-        'Answer 1': [<correct_answer>, <'This answer is correct because...'>], 
-        'Answer 2': [<incorrect_answer>, <'This answer is incorrect because...'>],
-        'Answer 3': [<incorrect_answer>, <'This answer is incorrect because...'>],
-        'Answer 4': [<incorrect_answer>, <'This answer is incorrect because...'>]}},
-        {'Question 3': <question>, 
-        'Answers': {
-        'Answer 1': [<correct_answer>, <'This answer is correct because...'>], 
-        'Answer 2': [<incorrect_answer>, <'This answer is incorrect because...'>],
-        'Answer 3': [<incorrect_answer>, <'This answer is incorrect because...'>],
-        'Answer 4': [<incorrect_answer>, <'This answer is incorrect because...'>]}}
-        ]`),
+        Return only the requested quiz content with no extra commentary.`),
+    new AIMessage("OK"),
+    new HumanMessage(`
+        Text: ${description}
+        Student's Level: ${level}
+        Student's Language: ${language}
+        `),
   ]);
 
   return response;

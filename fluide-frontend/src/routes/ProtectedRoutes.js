@@ -6,7 +6,7 @@ function ProtectedRoutes() {
     (state) => state?.persistData?.loginData?.data?.user
   );
 
-  return userData !== undefined ? <Navigate to="/" /> : <Outlet />;
+  return userData !== undefined ? <Navigate to="/dashboard" /> : <Outlet />;
 }
 
 export default ProtectedRoutes;

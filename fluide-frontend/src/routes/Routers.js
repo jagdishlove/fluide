@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import HomePage from "../pages/homePage/HomePage";
+import LandingPage from "../pages/LandingPage/LandingPage";
 import Header from "../components/Header/Header";
 import Login from "../pages/LoginPage/Login";
 import LessonPage from "../pages/lessonPage/LessonPage";
@@ -25,7 +26,8 @@ const Routers = () => {
         <Header />
         <div style={{ flex: 1 }}>
           <Routes>
-            <Route path="/" element={<HomePage />} />
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/dashboard" element={<HomePage />} />
             <Route path="/lesson/:id/:module" element={<LessonPage />} />
             <Route
               path="/lesson/:id/:module/chapter"

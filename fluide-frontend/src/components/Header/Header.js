@@ -34,7 +34,7 @@ const Header = () => {
   const dispatch = useDispatch();
 
   const userData = useSelector(
-    (state) => state?.persistData?.loginData?.data?.user
+    (state) => state?.persistData?.loginData?.data?.user,
   );
   return (
     <AppBar
@@ -50,7 +50,14 @@ const Header = () => {
       position="static"
     >
       <Container maxWidth="xl">
-        <Toolbar sx={{ justifyContent: "space-between" }}>
+        <Toolbar
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          {/* Left: logo */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 4 }}>
             <LazyLoadImage
               style={{ cursor: "pointer" }}
@@ -60,20 +67,20 @@ const Header = () => {
               src={logo}
               alt="logo"
             />
-            <Typography
-              variant="body1"
-              sx={{
-                cursor: "pointer",
-                fontWeight: 500,
-                display: { xs: "none", md: "block" },
-                "&:hover": { color: "#6C8EA5" },
-              }}
-              onClick={() => navigate("/dashboard")}
-            >
-              Dashboard
-            </Typography>
           </Box>
-          <Box>
+
+          {/* Center: nav (centered) */}
+          <Box
+            sx={{
+              flexGrow: 1,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          ></Box>
+
+          {/* Right: auth / popover */}
+          <Box sx={{ display: "flex", alignItems: "center" }}>
             {!userData ? (
               <Box sx={{ display: "flex", gap: 2 }}>
                 <Button
@@ -101,6 +108,5 @@ const Header = () => {
     </AppBar>
   );
 };
-
 
 export default Header;

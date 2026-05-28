@@ -2,12 +2,15 @@ import React, { useEffect, useState, useRef } from "react";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import { Typography, Chip } from "@mui/material";
+import ReactMarkdown from "react-markdown";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 import { useMediaQuery } from "../../hook/useMediaQuery";
-import exampleIcon from "../../assets/icons/exampleIcon.svg";
 import { style, mobile } from "./style";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { serverAddress1 } from "../../config";
+import "katex/dist/katex.min.css";
 
 const Example = ({
   exampleheader,
@@ -33,11 +36,21 @@ const Example = ({
   const searchTopic = useSelector(
     (state) => state.persistData.moduleData.searchData,
   );
+  const topic = searchTopic?.topic || "";
+  const moduleName = fetchStreamData?.module_name || "";
+  const language = fetchStreamData?.language || "english";
+  const lessonName =
+    descriptionData?.lesson_name || descriptionData?.lessonName || "";
+  const activityName =
+    descriptionData?.activity_name || descriptionData?.activityName || "";
+  const level = fetchStreamData?.level || "Beginner";
 
   useEffect(() => {
     if (!isExample && !levelType) return;
 
-    const nextLessonData = JSON.parse(localStorage.getItem("nextLessonData") || "null");
+    const nextLessonData = JSON.parse(
+      localStorage.getItem("nextLessonData") || "null",
+    );
 
     const ws = new WebSocket(`${serverAddress1}`);
 
@@ -67,12 +80,14 @@ const Example = ({
         const message = {
           type: "description",
           payload: {
-            topic: searchTopic?.topic || "",
-            module_name: fetchStreamData?.module_name || "",
+            topic,
+            module_name: moduleName,
             level: levelType,
-            language: fetchStreamData?.language || "english",
-            lesson_name: nextLessonData?.nextLessonTitle || descriptionData?.lesson_name || "",
-            activity_name: nextLessonData?.nextLessonTitle ? undefined : descriptionData?.activity_name,
+            language,
+            lesson_name: nextLessonData?.nextLessonTitle || lessonName,
+            activity_name: nextLessonData?.nextLessonTitle
+              ? undefined
+              : activityName,
           },
         };
         ws.send(JSON.stringify(message));
@@ -91,12 +106,14 @@ const Example = ({
         const message = {
           type: "example",
           payload: {
-            topic: searchTopic?.topic || "",
-            module_name: fetchStreamData?.module_name || "",
-            level: fetchStreamData?.level || "Beginner",
-            language: fetchStreamData?.language || "english",
-            lesson_name: nextLessonData?.nextLessonTitle || descriptionData?.lesson_name || "",
-            activity_name: nextLessonData?.nextLessonTitle ? undefined : descriptionData?.activity_name,
+            topic,
+            module_name: moduleName,
+            level,
+            language,
+            lesson_name: nextLessonData?.nextLessonTitle || lessonName,
+            activity_name: nextLessonData?.nextLessonTitle
+              ? undefined
+              : activityName,
           },
         };
         ws.send(JSON.stringify(message));
@@ -123,37 +140,43 @@ const Example = ({
       rawWordsRef.current = [];
       isProcessingRef.current = false;
     };
-  }, [levelType, isExample]);
+  }, [
+    activityName,
+    isExample,
+    language,
+    lessonName,
+    level,
+    levelType,
+    moduleName,
+    topic,
+  ]);
 
   useEffect(() => {
     if (rawWords.length === 0 || isProcessingRef.current) return;
 
     isProcessingRef.current = true;
-    
+
     const timer = setInterval(() => {
       if (wordIndexRef.current < rawWords.length) {
         const nextWord = rawWords[wordIndexRef.current];
-        
+
         if (nextWord !== undefined && nextWord !== null) {
           setDisplayedText((prev) => {
             let prefix = "";
             let wordToAdd = nextWord;
-            
+
             const trimmedWord = nextWord.trim();
             const isNumber = /^[\d]+$/.test(trimmedWord);
             const isNumberWithDot = /^[\d]+[.)]$/.test(trimmedWord);
             const isBullet = /^[-•*]$/.test(trimmedWord);
             const isEmptyString = nextWord === "" || nextWord === " ";
-            
-            const prevWord = wordIndexRef.current > 0 ? rawWords[wordIndexRef.current - 1] : null;
-            const prevIsEmpty = prevWord === "" || prevWord === " ";
-            
+
             const prevEndsWithNewline = prev.endsWith("\n");
-            
+
             if (isEmptyString) {
               return prev;
             }
-            
+
             if (isNumber && !prevEndsWithNewline) {
               prefix = "\n\n";
               wordToAdd = "Example " + nextWord + ":";
@@ -163,21 +186,22 @@ const Example = ({
             } else if (isBullet && !prevEndsWithNewline) {
               prefix = "\n";
             } else {
-              const needsSpace = prev.length > 0 && 
-                !prev.endsWith(" ") && 
+              const needsSpace =
+                prev.length > 0 &&
+                !prev.endsWith(" ") &&
                 !prevEndsWithNewline &&
-                nextWord !== " " && 
+                nextWord !== " " &&
                 nextWord !== "\n";
-              
+
               return prev + prefix + (needsSpace ? " " : "") + nextWord;
             }
-            
+
             return prev + prefix + wordToAdd;
           });
         }
-        
+
         wordIndexRef.current += 1;
-        
+
         if (contentRef.current) {
           contentRef.current.scrollTop = contentRef.current.scrollHeight;
         }
@@ -192,23 +216,136 @@ const Example = ({
       clearInterval(timer);
       isProcessingRef.current = false;
     };
-  }, [rawWords.length]);
+  }, [rawWords]);
 
   const isMobile = useMediaQuery("(max-width: 600px)");
+  const shouldRenderRichText =
+    /\$\$[\s\S]+?\$\$|\$[^$\n]+\$|^#{1,6}\s|^\s*[-*+]\s|^\s*\d+[.)]\s|\*\*[^*]+\*\*|_[^_]+_/m.test(
+      displayedText,
+    );
+
+  const renderContent = () => {
+    if (!shouldRenderRichText) {
+      return displayedText;
+    }
+
+    return (
+      <ReactMarkdown
+        remarkPlugins={[remarkMath]}
+        rehypePlugins={[rehypeKatex]}
+        components={{
+          p: ({ children }) => (
+            <Typography component="p" sx={{ mb: 1.5 }}>
+              {children}
+            </Typography>
+          ),
+          h1: ({ children }) => (
+            <Typography
+              component="h1"
+              variant="h4"
+              sx={{ mb: 1.5, fontWeight: 700 }}
+            >
+              {children}
+            </Typography>
+          ),
+          h2: ({ children }) => (
+            <Typography
+              component="h2"
+              variant="h5"
+              sx={{ mb: 1.25, fontWeight: 700 }}
+            >
+              {children}
+            </Typography>
+          ),
+          h3: ({ children }) => (
+            <Typography
+              component="h3"
+              variant="h6"
+              sx={{ mb: 1, fontWeight: 700 }}
+            >
+              {children}
+            </Typography>
+          ),
+          ul: ({ children }) => (
+            <Box component="ul" sx={{ pl: 3, mb: 1.5 }}>
+              {children}
+            </Box>
+          ),
+          ol: ({ children }) => (
+            <Box component="ol" sx={{ pl: 3, mb: 1.5 }}>
+              {children}
+            </Box>
+          ),
+          li: ({ children }) => (
+            <Box component="li" sx={{ mb: 0.5 }}>
+              <Typography component="span">{children}</Typography>
+            </Box>
+          ),
+          blockquote: ({ children }) => (
+            <Box
+              component="blockquote"
+              sx={{
+                ml: 0,
+                pl: 2,
+                borderLeft: "4px solid #667eea",
+                color: "#4b5563",
+              }}
+            >
+              {children}
+            </Box>
+          ),
+          code: ({ children, className, inline }) =>
+            inline ? (
+              <Box
+                component="code"
+                sx={{
+                  px: 0.75,
+                  py: 0.2,
+                  borderRadius: "6px",
+                  backgroundColor: "#eef2ff",
+                  fontFamily: "monospace",
+                }}
+              >
+                {children}
+              </Box>
+            ) : (
+              <Box
+                component="code"
+                sx={{
+                  display: "block",
+                  p: 2,
+                  borderRadius: "12px",
+                  backgroundColor: "#0f172a",
+                  color: "#e5e7eb",
+                  overflowX: "auto",
+                  whiteSpace: "pre-wrap",
+                  fontFamily: "monospace",
+                }}
+                className={className}
+              >
+                {children}
+              </Box>
+            ),
+        }}
+      >
+        {displayedText}
+      </ReactMarkdown>
+    );
+  };
 
   return (
     <Box sx={style.mainContainer}>
       <Paper sx={style.descriptionCard} elevation={0}>
         <Box sx={style.header}>
           <Box sx={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <Typography sx={style.headerTitle}>
-              {exampleheader}
-            </Typography>
+            <Typography sx={style.headerTitle}>{exampleheader}</Typography>
           </Box>
-          <Chip 
+          <Chip
             label={isComplete ? "Completed" : "Generating..."}
-            sx={{ 
-              backgroundColor: isComplete ? "rgba(16, 185, 129, 0.2)" : "rgba(255,255,255,0.2)",
+            sx={{
+              backgroundColor: isComplete
+                ? "rgba(16, 185, 129, 0.2)"
+                : "rgba(255,255,255,0.2)",
               color: "#fff",
               fontWeight: 500,
               fontSize: "0.75rem",
@@ -216,8 +353,8 @@ const Example = ({
             size="small"
           />
         </Box>
-        
-        <Box 
+
+        <Box
           sx={isMobile ? mobile.contentBox : style.contentBox}
           ref={contentRef}
         >
@@ -231,31 +368,31 @@ const Example = ({
               </Typography>
             </Box>
           )}
-          
-          <Typography sx={style.contentText}>
-            {displayedText}
+
+          <Box sx={style.contentText}>
+            {renderContent()}
             {!isComplete && (
-              <Box 
-                component="span" 
-                sx={{ 
+              <Box
+                component="span"
+                sx={{
                   display: "inline-block",
                   width: "2px",
                   height: "1.1em",
                   backgroundColor: "#f59e0b",
                   marginLeft: "2px",
                   verticalAlign: "text-bottom",
-                  animation: "cursorBlink 1s infinite"
-                }} 
+                  animation: "cursorBlink 1s infinite",
+                }}
               />
             )}
-          </Typography>
+          </Box>
         </Box>
-        
+
         <Box sx={style.statusContainer}>
           <Typography sx={style.statusText}>
-            {!isComplete 
-              ? "⏳ Generating examples..." 
-              : "✓ Examples generated"}
+            {!isComplete
+              ? "⏳ Generating examples..."
+              : " ✅ Examples generated!"}
           </Typography>
         </Box>
       </Paper>
