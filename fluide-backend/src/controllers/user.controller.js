@@ -446,16 +446,16 @@ const loginFailed = catchAsync(async (req, res) => {
 });
 
 const loginSucess = catchAsync(async (req, res) => {
-  const user = await userService.loginSucess(req.user);
-  if (req.user) {
-    res.status(200).json({
-      status: 200,
-      message: "Successfully Logged In.",
-      user: user,
-    });
-  } else {
+  if (!req.user) {
     res.status(403).json({ error: true, message: "Not Authorized." });
+    return;
   }
+  const user = await userService.loginSucess(req.user);
+  res.status(200).json({
+    status: 200,
+    message: "Successfully Logged In.",
+    user: user,
+  });
 });
 
 const logout = catchAsync(async (req, res) => {

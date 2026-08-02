@@ -7,13 +7,27 @@ const { userController } = require("./controllers");
 const wss = new WebSocketServer({ port: config.socket_port });
 
 let server;
-mongoose.connect(config.mongoose.url, config.mongoose.options).then(() => {
-  logger.info("Connected to MongoDB");
-});
 
-server = app.listen(config.port, () => {
-  logger.info(`Listening to port ${config.port}`);
-});
+mongoose
+  .connect(config.mongoose.url, config.mongoose.options)
+  .then(() => {
+    logger.info("Connected to MongoDB");
+    server = app.listen(config.port, () => {
+      logger.info(`Listening to port ${config.port}`);
+    });
+  })
+  .catch((error) => {
+    logger.error(`Failed to connect to MongoDB: ${error.message}`);
+    if (
+      error.name === "MongooseServerSelectionError" ||
+      /whitelist|access from an IP/i.test(error.message)
+    ) {
+      logger.error(
+        "Hint: Your current IP is probably not whitelisted in MongoDB Atlas. Add it under Network Access > IP Access List, then restart the server."
+      );
+    }
+    exitHandler();
+  });
 
 const exitHandler = () => {
   if (server) {
