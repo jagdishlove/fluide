@@ -6,6 +6,7 @@ const validate = require("../middlewares/validate");
 const controller = require("../controllers");
 const validation = require("../validations");
 const auth = require("../middlewares/auth");
+const config = require("../config/config");
 
 // router.post("/quiz-answer", validate(validation.userValidation.getQuizAnswer), controller.userController.getQuizAnswer)
 router.post(
@@ -69,7 +70,7 @@ router.get("/auth/login/success", controller.userController.loginSucess);
 router.get(
   "/auth/google/callback",
   passport.authenticate("google", {
-    successRedirect: "http://localhost:3001/googleLogin",
+    successRedirect: `${config.clientUrl}/googleLogin`,
     failureRedirect: "/auth/login/failed",
   }),
 );

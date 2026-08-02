@@ -391,7 +391,7 @@ const loginSucess = catchAsync(async (req, res) => {
 
 const logout = catchAsync(async (req, res) => {
   req.logout();
-  res.redirect(process.env.CLIENT_URL);
+  res.redirect(config.clientUrl);
 });
 
 const verifyEmail = catchAsync(async (req, res) => {

@@ -1,9 +1,12 @@
 {
-  "name": "fluide_Backend",
+  "name": "fluide-backend",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
-    "heroku-postbuild": "npm install --prefix server",
-    "start": "npm start --prefix server"
+    "heroku-postbuild": "npm install --prefix fluide-backend --production",
+    "start": "cd fluide-backend && node src/index.js"
   }
 }

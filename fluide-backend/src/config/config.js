@@ -11,10 +11,19 @@ const envVarsSchema = Joi.object()
       .valid("production", "development", "test")
       .required(),
     PORT: Joi.number(),
-    SOCKET_PORT: Joi.number(),
     GOOGLE_API_KEY: Joi.string(),
     MONGODB_URL: Joi.string().description("Mongo DB url"),
     JWT_SECRET: Joi.string().description("JWT secret key"),
+    API_URL: Joi.string().description("Backend API URL").when("NODE_ENV", {
+      is: "production",
+      then: Joi.required(),
+      otherwise: Joi.optional(),
+    }),
+    CLIENT_URL: Joi.string().description("Frontend app URL").when("NODE_ENV", {
+      is: "production",
+      then: Joi.required(),
+      otherwise: Joi.optional(),
+    }),
     JWT_ACCESS_EXPIRATION_MINUTES: Joi.number()
       .default(180)
       .description("minutes after which access tokens expire"),
@@ -48,13 +57,16 @@ if (error) {
   throw new Error(`Config validation error: ${error.message}`);
 }
 
+const normalizeUrl = (url) => (url ? url.replace(/\/+$/, "") : undefined);
+
 module.exports = {
   env: envVars.NODE_ENV,
   port: envVars.PORT || 8080,
-  socket_port: envVars.SOCKET_PORT || 8081,
   googleApiKey: envVars.GOOGLE_API_KEY,
   openaiKey: envVars.OPENAI_KEY,
   generationLimit: envVars.GENERATION_LIMIT,
+  apiUrl: normalizeUrl(envVars.API_URL) || `http://localhost:${envVars.PORT || 8080}`,
+  clientUrl: normalizeUrl(envVars.CLIENT_URL) || "http://localhost:3001",
   mongoose: {
     url: envVars.MONGODB_URL + (envVars.NODE_ENV === "test" ? "-test" : ""),
     options: {

@@ -36,9 +36,14 @@ app.use(helmet());
 app.use(express.urlencoded({ extended: true }));
 
 // enable cors
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:3001",
+  config.clientUrl,
+].filter(Boolean);
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://localhost:3001"],
+    origin: allowedOrigins,
     methods: "GET,POST,PUT,DELETE",
     credentials: true,
   })

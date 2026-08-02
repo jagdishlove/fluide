@@ -4,7 +4,7 @@ const config = require("./config/config");
 const logger = require("./config/logger");
 const { WebSocketServer } = require("ws");
 const { userController } = require("./controllers");
-const wss = new WebSocketServer({ port: config.socket_port });
+const wss = new WebSocketServer({ noServer: true });
 
 let server;
 
@@ -14,6 +14,11 @@ mongoose
     logger.info("Connected to MongoDB");
     server = app.listen(config.port, () => {
       logger.info(`Listening to port ${config.port}`);
+    });
+    server.on("upgrade", (request, socket, head) => {
+      wss.handleUpgrade(request, socket, head, (ws) => {
+        wss.emit("connection", ws, request);
+      });
     });
   })
   .catch((error) => {
