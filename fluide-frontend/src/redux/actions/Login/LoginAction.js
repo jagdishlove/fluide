@@ -60,7 +60,7 @@ export const userLogin = (data) => {
 };
 export const googleLoginAction = () => {
   return async (dispatch) => {
-    window.open(`https://localhost:8080/api/auth/google/callback`, "_self");
+    window.open(`${serverAddress}/auth/google/`, "_self");
   };
 };
 
@@ -69,7 +69,7 @@ export const googleLoginRedirectAction = () => {
     dispatch(startLoading());
 
     try {
-      const url = `https://www.fluide.ai/api/auth/login/success`;
+      const url = `${serverAddress}/auth/login/success`;
       const { data } = await axios.get(url, { withCredentials: true });
       localStorage.setItem("token", data.user.token.accessToken);
       dispatch(googleLoginSuccess(data.user));

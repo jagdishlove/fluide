@@ -10,11 +10,11 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import { style } from "./style";
 
-const SearchInput = ({ value, onChange, onKeyDown, error ,placeholder,styling}) => {
+const SearchInput = ({ value, onChange, onKeyDown, error, placeholder, styling }) => {
   return (
     <TextField
       required
-      sx={styling ? style.styling: style.textfield}
+      sx={styling ? style.styling : style.textfield}
       placeholder={placeholder}
       value={value}
       onChange={onChange}
@@ -27,7 +27,6 @@ const SearchInput = ({ value, onChange, onKeyDown, error ,placeholder,styling}) 
         ),
       }}
     />
-   
   );
 };
 

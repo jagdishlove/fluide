@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import LeassonCard from "./lessonCard.js/LessonCard";
 import lessonIcon from "../../assets/icons/module.svg";
-import { Box, Container } from "@mui/system";
 import ScrollableContainer from "../../components/ScrollableContainer/ScrollableContainer";
 import { IconButtonComponent } from "../../components/button/Button";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -13,7 +12,7 @@ import {
   useParams,
   useSearchParams,
 } from "react-router-dom";
-import { Typography } from "@mui/material";
+import { Box, Container, Typography } from "@mui/material";
 import { useState } from "react";
 import DescriptionCard from "../../components/DescriptionCard/DescriptionCard";
 import { useDispatch, useSelector } from "react-redux";
@@ -28,6 +27,7 @@ import { viewLessonData } from "../../redux/actions/viewLessonAction/viewLessonA
 import { cleanUpDataAction } from "../../redux/actions/cleanUpData/cleanUpData";
 import { routeDataAction } from "../../redux/actions/routesData/routesDataAction";
 import QuizContainer from "../../components/quiz/QuestionsContainer";
+import { purgeCache } from "../../utils/aiCacheService";
 
 const LessonPage = () => {
   const navigate = useNavigate();
@@ -84,6 +84,7 @@ const LessonPage = () => {
     module.charAt(0).toUpperCase() + module.slice(1);
   const sliderCardSubmitHandler = (data, index) => {
     dispatch(routeDataAction("lessons"));
+    purgeCache({ topic: searchData.topic, module: data });
     dispatch(viewLessonData(data));
     setIsDescription(false);
     setLessonTitle("");

@@ -1,16 +1,23 @@
-import { Box } from "@mui/system";
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { style, mobile } from "./style";
 import askQuestionIcon from "../../assets/icons/askQuestionIcon.svg";
-import { Typography, useMediaQuery } from "@mui/material";
+import { Box, Typography, useMediaQuery } from "@mui/material";
 import SearchInput from "../searchInput/SearchInput";
 import ButtonComponent from "../button/Button";
-import Example from "../Examples/Example";
-import { serverAddress } from "../../config";
+import { toast } from "react-toastify";
+import { websocketUrl } from "../../config";
+import { useSelector } from "react-redux";
+import { getCached, setCached, hashText } from "../../utils/aiCacheService";
 const AskQuestion = ({ descriptionData }) => {
   const [askMeQuestion, setAskMeQuestion] = useState([]);
   const [searchValue, setSearchValue] = useState("");
   const isMobile = useMediaQuery("(max-width:600px)");
+  const wsRef = useRef(null);
+  const askMeWordsRef = useRef([]);
+  const askCleanupRef = useRef(false);
+  const searchData = useSelector(
+    (state) => state.persistData.moduleData.searchData,
+  );
 
   const askQuestioChangeHandler = (e) => {
     setSearchValue(e.target.value);
@@ -24,41 +31,95 @@ const AskQuestion = ({ descriptionData }) => {
 
   const askQuestionSearchHandler = () => {
     setAskMeQuestion([]);
-    const eventSourceAskQuestion = new EventSource(
-      `${serverAddress}/ask-question?language=${descriptionData.language}&question=${searchValue}`
+
+    const descriptionText = JSON.parse(
+      localStorage.getItem("description") || '""',
     );
+    const ctx = {
+      topic: searchData?.topic,
+      module: hashText(descriptionText),
+      level: searchData?.level || descriptionData?.level || "Beginner",
+      language:
+        searchData?.language || descriptionData?.language || "english",
+      question: searchValue,
+    };
 
-    eventSourceAskQuestion.onmessage = (event) => {
-      const data = event.data.split(" ");
+    const cached = getCached("ask", ctx);
+    if (cached && Array.isArray(cached)) {
+      setAskMeQuestion(cached);
+      return;
+    }
 
-      const filteredData = [];
+    if (wsRef.current) {
+      wsRef.current.close();
+    }
+    askCleanupRef.current = false;
+    askMeWordsRef.current = [];
 
-      for (let i = 0; i < data.length; i++) {
-        if (data[i].trim() === "") {
-          // Check if the next word exists and is also an empty string (consecutive spaces)
-          if (i + 1 < data.length && data[i + 1].trim() === "") {
-            // Skip this empty string
-            continue;
+    const ws = new WebSocket(websocketUrl);
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      ws.send(
+        JSON.stringify({
+          type: "ask-question",
+          payload: {
+            level: searchData?.level || descriptionData?.level || "Beginner",
+            language:
+              searchData?.language || descriptionData?.language || "english",
+            text: descriptionText,
+            question: searchValue,
+          },
+        }),
+      );
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const receivedData = JSON.parse(event.data);
+        if (receivedData.token && typeof receivedData.token === "string") {
+          const data = receivedData.token.split(" ");
+
+          const filteredData = [];
+
+          for (let i = 0; i < data.length; i++) {
+            if (data[i].trim() === "") {
+              if (i + 1 < data.length && data[i + 1].trim() === "") {
+                continue;
+              }
+            }
+            filteredData.push(data[i]);
           }
+
+          askMeWordsRef.current = [...askMeWordsRef.current, ...filteredData];
+          setAskMeQuestion((prevWords) => [...prevWords, ...filteredData]);
         }
-        filteredData.push(data[i]);
+      } catch (e) {
+        console.error("Parse error:", e);
       }
-
-      setAskMeQuestion((prevWords) => [...prevWords, ...filteredData]);
     };
 
-    eventSourceAskQuestion.onopen = (event) => {
-      console.log("Connection opened");
-    };
-    eventSourceAskQuestion.onclose = () => {
-      console.log("Connection Closed");
+    ws.onerror = () => {
+      toast.error("Oops! Just try again.");
+      ws.close();
     };
 
-    eventSourceAskQuestion.onerror = () => {
-      console.log("Connection Error");
-      eventSourceAskQuestion.close();
+    ws.onclose = () => {
+      if (!askCleanupRef.current && askMeWordsRef.current.length > 0) {
+        setCached("ask", ctx, askMeWordsRef.current);
+      }
+      ws.close();
     };
   };
+
+  useEffect(() => {
+    return () => {
+      askCleanupRef.current = true;
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+    };
+  }, []);
 
   return (
     <Box sx={style.askquestionBox}>
@@ -83,36 +144,74 @@ const AskQuestion = ({ descriptionData }) => {
       </Box>
       <Box sx={{ width: "100%" }}>
         {askMeQuestion.length > 0 && (
-          <Example
-            exampletitle=" "
-            exampleheader="Answer"
-            exampleicon={askQuestionIcon}
-            examplepara={askMeQuestion?.map((word, index) => {
-              // Check if the word is empty (space)
-              if (word === "") {
-                // Get the next word
-                const nextWord = askMeQuestion[index + 1];
-                // Check if the next word is also empty (space)
-                if (nextWord === "") {
-                  // Render the current word and move to a new line
-                  return (
-                    <React.Fragment key={index}>
-                      <br />
-                      <br />
-                    </React.Fragment>
-                  );
+          <Box
+            sx={{
+              borderRadius: "16px",
+              overflow: "hidden",
+              backgroundColor: "#fff",
+              boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
+              border: "1px solid #e8e8e8",
+            }}
+          >
+            <Box
+              sx={{
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                padding: "20px 32px",
+                display: "flex",
+                gap: "1rem",
+                alignItems: "center",
+              }}
+            >
+              <img src={askQuestionIcon} alt="img" />
+              <Typography
+                sx={{
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: "1.3rem",
+                  fontWeight: 600,
+                  color: "#fff",
+                  letterSpacing: "0.3px",
+                }}
+              >
+                Answer
+              </Typography>
+            </Box>
+            <Box
+              sx={{
+                padding: "24px 32px",
+                minHeight: "150px",
+                backgroundColor: "#fafbfc",
+                fontFamily:
+                  "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+                fontSize: "1.05rem",
+                lineHeight: 1.85,
+                color: "#374151",
+                textAlign: "justify",
+                wordBreak: "break-word",
+                whiteSpace: "pre-wrap",
+              }}
+            >
+              {askMeQuestion.map((word, index) => {
+                if (word === "") {
+                  const nextWord = askMeQuestion[index + 1];
+                  if (nextWord === "") {
+                    return (
+                      <React.Fragment key={index}>
+                        <br />
+                        <br />
+                      </React.Fragment>
+                    );
+                  }
                 }
-              }
 
-              // Render the word
-              return (
-                <span key={index}>
-                  {word}
-                  {word === "" ? " " : ""}
-                </span>
-              );
-            })}
-          />
+                return (
+                  <span key={index}>
+                    {word}
+                    {word === "" ? " " : ""}
+                  </span>
+                );
+              })}
+            </Box>
+          </Box>
         )}
       </Box>
     </Box>

@@ -1,6 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { Box } from "@mui/system";
-import { IconButton } from "@mui/material";
+import { useRef } from "react";
+import { Box, IconButton } from "@mui/material";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 
 const ScrollableContainer = ({
@@ -10,6 +9,7 @@ const ScrollableContainer = ({
 }) => {
   const windowWidth = window.innerWidth;
   const containerRef = useRef();
+  const fadeWidth = "36px";
 
   const handleScrollLeft = () => {
     const container = containerRef.current;
@@ -50,6 +50,20 @@ const ScrollableContainer = ({
           width: "100%",
           height: "100%",
           [`overflow${direction}`]: "scroll",
+          WebkitMaskImage:
+            direction === "X"
+              ? `linear-gradient(90deg, transparent 0, black ${fadeWidth}, black calc(100% - ${fadeWidth}), transparent 100%)`
+              : `linear-gradient(180deg, transparent 0, black ${fadeWidth}, black calc(100% - ${fadeWidth}), transparent 100%)`,
+          maskImage:
+            direction === "X"
+              ? `linear-gradient(90deg, transparent 0, black ${fadeWidth}, black calc(100% - ${fadeWidth}), transparent 100%)`
+              : `linear-gradient(180deg, transparent 0, black ${fadeWidth}, black calc(100% - ${fadeWidth}), transparent 100%)`,
+          WebkitMaskSize: "100% 100%",
+          maskSize: "100% 100%",
+          WebkitMaskRepeat: "no-repeat",
+          maskRepeat: "no-repeat",
+          WebkitMaskPosition: "center",
+          maskPosition: "center",
           //for mobile    overFlow: "scroll",
         }}
       >

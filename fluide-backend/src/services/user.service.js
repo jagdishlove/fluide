@@ -1,56 +1,94 @@
-const { Configuration, OpenAIApi } = require("openai");
+const { z } = require("zod");
 const httpStatus = require("http-status");
 const bcrypt = require("bcryptjs");
-const { ChatOpenAI } = require("langchain/chat_models/openai");
+const { ChatGoogleGenerativeAI } = require("@langchain/google-genai");
 const {
-  HumanChatMessage,
-  AIChatMessage,
-  SystemChatMessage,
-} = require("langchain/schema");
+  SystemMessage,
+  HumanMessage,
+  AIMessage,
+} = require("@langchain/core/messages");
 const config = require("../config/config");
 const ApiError = require("../utils/ApiError");
 const { User } = require("../models");
 const tokenService = require("./token.service");
 const emailService = require("./email.service");
 
-const chat1 = new ChatOpenAI({
+const getModuleSchema = z.object({
+  Title: z.string().describe("The name of the subject title"),
+  Description: z.string().describe("A clear explanation of how it works"),
+});
+
+const getLessonsSchema = z.object({
+  Title: z.string().describe("The name of the subject title"),
+  Chapters: z.array(z.string()).describe("A clear explanation of how it works"),
+});
+
+const quizAnswerSchema = z
+  .array(z.string())
+  .min(2)
+  .max(2)
+  .describe("Array with [answer text, explanation]");
+
+const quizAnswersSchema = z.object({
+  "Answer 1": quizAnswerSchema,
+  "Answer 2": quizAnswerSchema,
+  "Answer 3": quizAnswerSchema,
+  "Answer 4": quizAnswerSchema,
+});
+
+const quizQuestionSchema = z.object({
+  Question: z.string().describe("Quiz question text"),
+  Answers: quizAnswersSchema,
+});
+
+const ResponseSchema = z.array(getModuleSchema);
+const getLessonsResponseSchema = z.array(getLessonsSchema);
+const getQuizResponseSchema = z.array(quizQuestionSchema).length(3);
+
+const chat1 = new ChatGoogleGenerativeAI({
+  apiKey: config.googleApiKey,
+  model: "gemini-3.1-flash-lite-preview",
   temperature: 0,
-  openAIApiKey: config.openAIKey,
-  modelName: "gpt-3.5-turbo",
+  maxRetries: 3,
+  max_tokens: -1,
 });
-const chat2 = new ChatOpenAI({
+const chat2 = new ChatGoogleGenerativeAI({
+  apiKey: config.googleApiKey,
+  model: "gemini-pro",
   temperature: 0.6,
-  openAIApiKey: config.openAIKey,
-  modelName: "gpt-3.5-turbo",
 });
-const chat3 = new ChatOpenAI({
+const chat3 = new ChatGoogleGenerativeAI({
+  apiKey: config.googleApiKey,
+  model: "gemini-pro",
   temperature: 0.8,
-  openAIApiKey: config.openAIKey,
-  modelName: "gpt-3.5-turbo",
 });
+
+const getModuleChat = chat1.withStructuredOutput(ResponseSchema);
+const getLessonsChat = chat1.withStructuredOutput(getLessonsResponseSchema);
+const getQuizChat = chat1.withStructuredOutput(getQuizResponseSchema);
 
 const getModule = async (data) => {
   const { topic, level, language } = data;
   try {
-    response = await chat1.call([
-      new SystemChatMessage(`You are an intelligent tutor who is an expert in any academic or professional topic that your student wants to learn about. 
-  
-     When you teach, your educational content is of the highest quality, most often combining concepts, theories, facts, and information that give the full picture of the topic to your student. 
-     
+    const response = await getModuleChat.invoke([
+      new SystemMessage(`You are an intelligent tutor who is an expert in any academic or professional topic that your student wants to learn about.
+
+     When you teach, your educational content is of the highest quality, most often combining concepts, theories, facts, and information that give the full picture of the topic to your student.
+
      You can write educational content in 10 languages: English, Mandarin, Hindi, Spanish, French, Arabic, Bengali, Portuguese, German, and Japanese.
-     
+
      You can adapt your educational content and the vocabulary you use to the level of the student. You can use different teaching techniques to best communicate with your student based on 3 proficiency levels: beginner, intermediate, or advanced.
-     
+
      You will be provided with an academic or professional topic, the student’s level, and the student’s language, in the following format:
      Topic: …
      Student’s Level: …
      Student’s Language: …
-     
-     Your task is to generate a list of every relevant module that the topic is comprised of. You will use vocabulary that is adapted to the student’s level. You will write your answer in the student’s language. 
+
+     Your task is to generate a list of every relevant module that the topic is comprised of. You will use vocabulary that is adapted to the student’s level. You will write your answer in the student’s language.
      The modules you generate must represent all the main branches of that topic.
-     
+
      In order to provide an excellent answer, you will follow the below list of requirements between triple hashtags, exactly as they are listed. Before providing your answer, check that all requirements within the following list have been satisfied.
-     
+
      Requirements:
      ###
      - Generate between 6 and 8 modules for the topic, not less, not more. The broader the topic, the larger the number of modules should be.
@@ -58,37 +96,63 @@ const getModule = async (data) => {
      - Adapt the ideas and vocabulary you use in your answer to the student’s level indicated.
      - The modules generated should be distinct from each other and not repetitive.
      - Each module consists of a title and a description.
-     - Each module’s title must be clear and concise. It can either be 1 word or a very short sentence, but the shorter, the better. 
+     - Each module’s title must be clear and concise. It can either be 1 word or a very short sentence, but the shorter, the better.
      - Each module’s description must be a clear and concise summary of what the student will learn about in that specific module.
-     - Each module’s description must be at least 10 words long and at most 80 words long. 
+     - Each module’s description must be at least 10 words long and at most 80 words long.
      - Your answer should only contain the modules' titles and descriptions, nothing else.
      - In your answer, do not include any character that would result in the following error: "Unexpected token in JSON". Therefore, you must absolutely avoid any character that is not allowed in JSON, such as "#" and "]".
      - Provide your answer in the format below.
      Format of Answer:
      [{'Title': <module_title>, {{'Description': <description>}}}, ..., {'Title': <module_title>, {{'Description': <description>}}}]
      ###
-     
+
      You will stay objective, and since you are an expert in the topic, you will stay confident in your answers.
-     
+
      If you understand, say OK.`),
-      new AIChatMessage("OK"),
-      new HumanChatMessage(
-        `Topic: ${topic} 
-      Student’s Level: ${level} 
-      Student’s Language: ${language}`
+      new AIMessage("OK"),
+      new HumanMessage(
+        `Topic: ${topic}
+      Student’s Level: ${level}
+      Student’s Language: ${language}`,
       ),
     ]);
+    // const newResponse = {
+    //   content:
+    //     "[{'Title': 'Geography & People', 'Description': 'Learn about where the Philippines is located in Southeast Asia and the diverse groups of people who live across its many islands, understanding their basic identities.'}, {'Title': 'History Snapshot', 'Description': 'Discover the major events and influences that shaped the Philippines, from ancient times to the Spanish and American colonial periods, in a simple overview.'}, {'Title': 'Family & Community', 'Description': 'Explore the strong importance of family in Filipino life, including respect for elders, close-knit relationships, and the spirit of helping neighbors called \"bayanihan.\"'}, {'Title': 'Filipino Cuisine', 'Description': 'Get to know popular Filipino dishes like adobo and sinigang, common ingredients, and the significant role food plays in daily life and special celebrations.'}, {'Title': 'Festivals & Traditions', 'Description': 'Learn about the colorful fiestas, unique customs, and traditional celebrations that bring communities together with music, dance, and parades across the islands.'}, {'Title': 'Arts & Expressions', 'Description': 'Discover traditional Filipino music, folk dances, intricate crafts like weaving, and other creative ways Filipinos express their rich heritage and stories.'}, {'Title': 'Language & Communication', 'Description': 'Understand the national language, Filipino (based on Tagalog), learn some common phrases, and explore how Filipinos communicate and interact with each other.'}]",
+    //   additional_kwargs: {
+    //     finishReason: "STOP",
+    //     index: 0,
+    //     __gemini_function_call_thought_signatures__: {},
+    //   },
+    //   response_metadata: {
+    //     tokenUsage: {
+    //       promptTokens: 676,
+    //       completionTokens: 289,
+    //       totalTokens: 1565,
+    //     },
+    //     finishReason: "STOP",
+    //     index: 0,
+    //   },
+    //   tool_calls: [],
+    //   invalid_tool_calls: [],
+    //   usage_metadata: {
+    //     input_tokens: 676,
+    //     output_tokens: 289,
+    //     total_tokens: 1565,
+    //   },
+    // };
+    return response;
   } catch (error) {
     console.error("Error in getModule:", error);
+    throw error;
   }
-  return response;
 };
 
 const getLessons = async (data) => {
   const { module_name, level, language, topic } = data;
 
-  const response = await chat1.call([
-    new SystemChatMessage(`You are an intelligent tutor who is an expert in any academic or professional topic that your student wants to learn about. 
+  const response = await getLessonsChat.invoke([
+    new SystemMessage(`You are an intelligent tutor who is an expert in any academic or professional topic that your student wants to learn about. 
   
       When you teach, your educational content is of the highest quality, most often combining concepts, theories, facts, and information that give the full picture of the topic to your student. 
       
@@ -128,27 +192,23 @@ const getLessons = async (data) => {
       You will stay objective, and since you are an expert in the topic, you will stay confident in your answers.
       
       If you understand, say OK.`),
-    new AIChatMessage("OK"),
-    new HumanChatMessage(
+    new AIMessage("OK"),
+    new HumanMessage(
       `Topic: ${topic} 
       Module: ${module_name}
       Student’s Level: ${level}
-      Student’s Language: ${language}`
+      Student’s Language: ${language}`,
     ),
   ]);
+
   return response;
 };
 
 const getQuiz = async (data) => {
   const { description, level, language } = data;
 
-  const response = await chat3.call([
-    new AIChatMessage(`
-        Text: ${description}
-        Student's Level: ${level}
-        Student's Language: ${language}
-        `),
-    new SystemChatMessage(`You now have the text above, along with the student’s level and language.
+  const response = await getQuizChat.invoke([
+    new SystemMessage(`You now have the source text, along with the student's level and language.
 
         You are an intelligent tutor who is an expert in any academic or professional topic that your student wants to learn about. 
         
@@ -159,9 +219,10 @@ const getQuiz = async (data) => {
         You can adapt your educational content and the vocabulary you use to the level of the student. You can use different teaching techniques to best communicate with your student based on 3 proficiency levels: beginner, intermediate, or advanced.
         
         Your tasks are to:
-        1. Generate 3 quiz questions at the student's level and in the student's language based on the text you have been provided with.
-        2. Generate 4 possible answers for each quiz question, the first one is the correct answer, and the remaining three answers are incorrect.
-        3. Generate a thorough explanation for each possible answer outlining why it is correct or incorrect.
+        1. Generate exactly 3 quiz questions at the student's level and in the student's language based on the provided text.
+        2. Generate exactly 4 possible answers for each quiz question.
+        3. Ensure the first answer is the correct one and the remaining three answers are incorrect.
+        4. Generate a thorough explanation for each possible answer outlining why it is correct or incorrect.
         
         Requirements:
         - Each quiz question should be related to a concept or idea from the text.
@@ -171,28 +232,13 @@ const getQuiz = async (data) => {
         - Each possible answer should be at the student's level.
         - Each possible answer must be at most 30 words long.
         - Each explanation should be thorough and be between 15 and 50 words, expanding on the reason(s) why the answer is correct or incorrect.
-        - In your answer, do not include any character that would result in the following error: "Unexpected token in JSON". Therefore, you must absolutely avoid any character that is not allowed in JSON, such as "#" and "]".
-        - Provide your answer in the format below.
-        Format of Answer in JSON:
-        [{'Question 1': <question>, 
-        'Answers': {
-        'Answer 1': [<correct_answer>, <'This answer is correct because...'>], 
-        'Answer 2': [<incorrect_answer>, <'This answer is incorrect because...'>],
-        'Answer 3': [<incorrect_answer>, <'This answer is incorrect because...'>],
-        'Answer 4': [<incorrect_answer>, <'This answer is incorrect because...'>]}},
-         {'Question 2': <question>, 
-        'Answers': {
-        'Answer 1': [<correct_answer>, <'This answer is correct because...'>], 
-        'Answer 2': [<incorrect_answer>, <'This answer is incorrect because...'>],
-        'Answer 3': [<incorrect_answer>, <'This answer is incorrect because...'>],
-        'Answer 4': [<incorrect_answer>, <'This answer is incorrect because...'>]}},
-        {'Question 3': <question>, 
-        'Answers': {
-        'Answer 1': [<correct_answer>, <'This answer is correct because...'>], 
-        'Answer 2': [<incorrect_answer>, <'This answer is incorrect because...'>],
-        'Answer 3': [<incorrect_answer>, <'This answer is incorrect because...'>],
-        'Answer 4': [<incorrect_answer>, <'This answer is incorrect because...'>]}}
-        ]`),
+        Return only the requested quiz content with no extra commentary.`),
+    new AIMessage("OK"),
+    new HumanMessage(`
+        Text: ${description}
+        Student's Level: ${level}
+        Student's Language: ${language}
+        `),
   ]);
 
   return response;
@@ -265,20 +311,20 @@ const login = async (data) => {
   if (!userExist) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
-      "Please enter a valid email address and password."
+      "Please enter a valid email address and password.",
     );
   } else {
     if (userExist.isVerified == false) {
       throw new ApiError(
         httpStatus.BAD_REQUEST,
-        "Please verify your account before proceeding."
+        "Please verify your account before proceeding.",
       );
     }
     const valid = bcrypt.compareSync(data.password, userExist.password);
     if (!valid) {
       throw new ApiError(
         httpStatus.BAD_REQUEST,
-        "Please enter a valid email address and password."
+        "Please enter a valid email address and password.",
       );
     } else {
       const token = await tokenService.generateAuthTokens(userExist);
@@ -322,7 +368,7 @@ const loginSucess = async (userData) => {
 const verifyEmail = async (data) => {
   const user = await User.findOneAndUpdate(
     { _id: data.id },
-    { isVerified: true }
+    { isVerified: true },
   );
   return user;
 };
@@ -333,7 +379,7 @@ const changePassword = async (data, user) => {
   if (!valid) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
-      "Please enter the correct old password."
+      "Please enter the correct old password.",
     );
   } else {
     const salt = bcrypt.genSaltSync(10);
@@ -362,7 +408,7 @@ const resetPassword = async (data) => {
   if (!userExist) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
-      "The email you provided doesn't exist with us."
+      "The email you provided doesn't exist with us.",
     );
   }
   const randomString = generateRandomString(10);
@@ -371,7 +417,7 @@ const resetPassword = async (data) => {
   await emailService.sendResetPasswordEmail(data.email, randomString);
   await User.findOneAndUpdate(
     { email: data.email },
-    { password: hashPassword }
+    { password: hashPassword },
   );
   return userExist;
 };

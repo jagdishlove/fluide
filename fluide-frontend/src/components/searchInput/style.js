@@ -14,11 +14,8 @@ export const style = {
     "& fieldset": {
       border: "none",
     },
-    "& .css-1o9s3wi-MuiInputBase-input-MuiOutlinedInput-input":{
-
-      width:{xs:"100%",sm:"67%",md:"67%"},
-    }
-  
-   
+    "& .MuiInputBase-input": {
+      paddingRight: { xs: "14px", sm: "185px" },
+    },
   }
 };

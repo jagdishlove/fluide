@@ -1,120 +1,180 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
-import { Button, Menu, MenuItem, Typography } from "@mui/material";
-import likeIcon from "../../assets/images/likeIcon.svg";
-import copyIcon from "../../assets/images/copyIcon.svg";
-import dislikeIcon from "../../assets/images/dislikeIcon.svg";
+import {
+  Button,
+  Menu,
+  MenuItem,
+  Typography,
+  Divider,
+  Chip,
+} from "@mui/material";
 import { useMediaQuery } from "../../hook/useMediaQuery";
 import ButtonComponent from "../button/Button";
 import arrowrightup from "../../assets/images/arrowrightup.svg";
 import { useDispatch, useSelector } from "react-redux";
-import { startStreaming } from "../../redux/actions/descriptionData/descriptionAction";
+import { Check } from "@mui/icons-material";
 import Quiz from "../quiz/Quiz";
 import Example from "../Examples/Example";
 import AskQuestion from "../AskQuestion/AskQuestion";
 import { fetchQuizData } from "../../redux/actions/quizData/quizAction";
-import { useNavigate, useParams } from "react-router-dom";
-import { saveLessonData } from "../../redux/actions/modulesData/moduleDataAction";
+import {
+  saveLessonData,
+  searchData,
+} from "../../redux/actions/modulesData/moduleDataAction";
 import { toast } from "react-toastify";
-import { formatData } from "../../utils/utility";
 import QuizContainer from "../quiz/QuestionsContainer";
-import { serverAddress1 } from "../../config";
+import { websocketUrl } from "../../config";
+import { getCached, setCached } from "../../utils/aiCacheService";
 
 const style = {
-  descriptionCard: {
-    width: "96%",
-    margin: "auto",
-    marginTop: "100px",
-    borderRadius: "25px",
-    marginBottom: "30px",
+  mainContainer: {
+    maxWidth: "1200px",
+    margin: "0 auto",
+    padding: "0 20px",
   },
-  header: {
-    background: "#EEF2FF 0% 0% no-repeat padding-box",
-    borderRadius: "15px 15px 0px 0px",
-    opacity: 1,
-    padding: "20px 50px",
+  descriptionCard: {
+    width: "100%",
+    borderRadius: "16px",
+    marginBottom: "24px",
+    overflow: "hidden",
+    backgroundColor: "#fff",
+    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
+    border: "1px solid #e8e8e8",
     display: "flex",
     justifyContent: "space-between",
-    flexDirection: { xs: "column", md: "row" },
-    gap: { xs: "1rem" },
-    alignItems: "center",
-    fontWeight: "bold",
+    marginTop: "24px",
   },
-  iconbox: {
+
+  descriptionSection: {
+    width: "100%",
+    borderRadius: "16px",
+    marginBottom: "24px",
+    overflow: "hidden",
+    backgroundColor: "#fff",
+    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
+    border: "1px solid #e8e8e8",
+  },
+  header: {
+    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    padding: "20px 32px",
     display: "flex",
-    justifyContent: "space-evenly",
+    justifyContent: "space-between",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: "12px",
+  },
+  headerTitle: {
+    fontFamily: "'Inter', sans-serif",
+    fontSize: { xs: "1.1rem", md: "1.3rem" },
+    fontWeight: 600,
+    color: "#fff",
+    letterSpacing: "0.3px",
+  },
+  headerBadge: {
+    backgroundColor: "rgba(255,255,255,0.2)",
+    color: "#fff",
+    padding: "4px 12px",
+    borderRadius: "20px",
+    fontSize: "0.75rem",
+    fontWeight: 500,
   },
   contentBox: {
-    padding: "50px 50px",
-    letterSpacing: "0.36px",
+    padding: { xs: "24px 20px", md: "32px 40px" },
+    position: "relative",
+    minHeight: "250px",
+    backgroundColor: "#fafbfc",
   },
-  iconstyle: {
-    width: "100%",
+  contentText: {
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+    fontSize: { xs: "0.95rem", md: "1.05rem" },
+    lineHeight: 1.85,
+    color: "#374151",
+    textAlign: "justify",
+    wordBreak: "break-word",
+    whiteSpace: "pre-wrap",
+  },
+  cursor: {
+    display: "inline-block",
+    width: "2px",
+    height: "1.1em",
+    backgroundColor: "#667eea",
+    marginLeft: "2px",
+    verticalAlign: "text-bottom",
+    animation: "cursorBlink 1s infinite",
+  },
+  loadingContainer: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "8px",
+    padding: "40px",
+    color: "#667eea",
+  },
+  loadingDot: {
+    width: "10px",
+    height: "10px",
+    borderRadius: "50%",
+    backgroundColor: "#667eea",
+    animation: "loadingPulse 1.4s ease-in-out infinite",
+  },
+  statusContainer: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "8px",
+    padding: "12px",
+    backgroundColor: "#f3f4f6",
+    borderTop: "1px solid #e5e7eb",
+  },
+  statusText: {
+    color: "#6b7280",
+    fontSize: "0.85rem",
+    fontFamily: "'Inter', sans-serif",
   },
   buttonsWrapper: {
     display: "flex",
-    justifyContent: "flex-start",
-    flexWrap: "wrap",
-  },
-  listItem: {
-    listStyle: "none",
-    padding: "7px",
-    paddingTop: "0px",
-    cursor: "pointer",
-  },
-  bottomSection: {
-    display: "flex",
     justifyContent: "space-between",
-    width: "100%",
     alignItems: "center",
-    padding: "0 1rem",
+    flexWrap: "wrap",
+    gap: "12px",
+    padding: "20px 32px",
+    backgroundColor: "#fff",
+    borderTop: "1px solid #e5e7eb",
   },
-  listdisplay: {
+  buttonGroup: {
     display: "flex",
-    flexDirection: "column",
-    width: "100px",
-    marginTop: "0",
+    flexWrap: "wrap",
     alignItems: "center",
-    letterSpacing: " 0.28px",
-    height: "90px",
-    paddingLeft: "35px",
-    boxShadow: "0px 3px 14px #00000042",
-    marginLeft: "6px",
-    padding: "15px",
-    borderRadius: "10px",
-    backgroundColor: "white",
-    opacity: 0.75,
+    gap: "12px",
   },
   menuitemstyle: {
     display: "flex",
-    justifyContent: "center",
-    padding: "8px 8px",
+    justifyContent: "flex-start",
+    gap: "8px",
+    padding: "10px 20px",
+    fontFamily: "'Inter', sans-serif",
+    fontSize: "0.9rem",
   },
 };
+
 const mobile = {
-  iconstyle: {
-    width: "25%",
-  },
-  descriptionCard: {
-    height: "100%",
-    width: "90%",
-    margin: "1rem",
-    borderRadius: "20px",
-  },
   contentBox: {
-    padding: "40px 30px",
-    letterSpacing: "0.36px",
+    padding: "20px",
   },
   buttonsWrapper: {
     display: "flex",
     flexDirection: "column",
-    alignItems: "center",
-    width: "100%",
-    marginLeft: "5px",
+    alignItems: "stretch",
+    gap: "10px",
+    padding: "16px",
+    margin: "auto",
   },
-  button: {
-    width: "75%",
+  buttonGroup: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "stretch",
+    gap: "10px",
   },
 };
 
@@ -128,37 +188,38 @@ const DescriptionCard = ({
   const dispatch = useDispatch();
   const quizData = useSelector((state) => state.nonPersistData.quizData);
   const isMobile = useMediaQuery("(max-width: 600px)");
-  const [liveWords, setLiveWords] = useState([]);
-
-  localStorage.setItem(
-    "description",
-    JSON.stringify(liveWords.filter((word) => word !== "").join(" "))
+  const searchTopic = useSelector(
+    (state) => state.persistData.moduleData.searchData,
   );
+  const [liveWords, setLiveWords] = useState([]);
+  const [displayedText, setDisplayedText] = useState("");
+  const [isComplete, setIsComplete] = useState(false);
+  const contentRef = useRef(null);
+  const wordIndexRef = useRef(0);
+  const liveWordsRef = useRef([]);
+  const descriptionCleanupRef = useRef(false);
 
   const isButtonLoading = useSelector(
-    (state) => state.loadingReducer.isButtonLoading
+    (state) => state.loadingReducer.isButtonLoading,
   );
 
-  const [variantchange, setVariantchange] = useState("outlined");
-
-  const [showCursor, setShowCursor] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const [buttonClicked, setButtonClicked] = useState("");
-  const [levelType, setLevelType] = useState(null);
+  const [levelType, setLevelType] = useState(searchTopic?.level || null);
+  const currentLevel = levelType || searchTopic?.level || "Beginner";
   const isExample = true;
-  const [isStreaming, setIsStreaming] = useState(true);
+
+  const getButtonVariant = (tab) =>
+    buttonClicked === tab ? "contained" : "outlined";
 
   const [currentLessonIndex, setCurrentLessonIndex] = useState(lessonIndex);
 
   const moduleData = useSelector(
-    (state) => state.persistData.lessonModuleReducer.data
+    (state) => state.persistData.lessonModuleReducer.data,
   );
 
-  const searchTopic = useSelector(
-    (state) => state.persistData.moduleData.searchData
-  );
   const lessonDatas = useSelector(
-    (state) => state.viewLessonReducer.viewLesson
+    (state) => state.viewLessonReducer.viewLesson,
   );
 
   const [nextLesonData, setNextLessonData] = useState({
@@ -167,8 +228,6 @@ const DescriptionCard = ({
   });
 
   const nextLessonData = JSON.parse(localStorage.getItem("nextLessonData"));
-
-  const exampleheaderData = `${lessonTitle} - Level: ${levelType}`;
 
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -182,37 +241,71 @@ const DescriptionCard = ({
     setLevelType(data);
     setAnchorEl(null);
     setButtonClicked("level");
+    const currentSearch =
+      searchTopic && !Array.isArray(searchTopic) ? searchTopic : {};
+    dispatch(searchData({ ...currentSearch, level: data }));
   };
 
   useEffect(() => {
-    setShowCursor(true);
-    return () => {
-      setShowCursor(false);
-    };
-  }, []);
+    if (searchTopic?.level) {
+      setLevelType(searchTopic.level);
+    }
+  }, [searchTopic?.level]);
 
   useEffect(() => {
     const nextLessonData = JSON.parse(localStorage.getItem("nextLessonData"));
     nextLessonTitle(nextLessonData);
 
-    // const ws = new WebSocket("ws://localhost:8081");
-    const ws = new WebSocket(`wss://${serverAddress1}`);
-    let isWebSocketCompleted = false;
+    const ctx = {
+      topic: searchTopic?.topic,
+      module: descriptionData?.module_name,
+      lesson: nextLessonData?.nextLessonTitle || descriptionData?.lesson_name,
+      chapter: nextLessonData?.nextLessonTitle
+        ? undefined
+        : descriptionData?.activity_name,
+      level: currentLevel,
+      language: descriptionData?.language,
+    };
+
+    const saveDescription = () => {
+      const fullText = liveWordsRef.current
+        .filter((word) => word !== "")
+        .join(" ");
+      if (fullText) {
+        setCached("description", ctx, fullText);
+        localStorage.setItem("description", JSON.stringify(fullText));
+      }
+    };
+
+    const cached = getCached("description", ctx);
+    if (cached) {
+      setDisplayedText(cached);
+      setIsComplete(true);
+      localStorage.setItem("description", JSON.stringify(cached));
+      return undefined;
+    }
+
+    descriptionCleanupRef.current = false;
+    const ws = new WebSocket(websocketUrl);
 
     ws.onmessage = (event) => {
       const receivedData = JSON.parse(event.data);
-      setLiveWords((prevData) => [...prevData, receivedData]);
+      if (receivedData.token === "[DONE]") {
+        setIsComplete(true);
+        saveDescription();
+        return;
+      }
+      liveWordsRef.current = [...liveWordsRef.current, receivedData.token];
+      setLiveWords([...liveWordsRef.current]);
     };
 
-    ws.onopen = (event) => {
-      console.log("event", event);
-      console.log("Connection opened");
+    ws.onopen = () => {
       const message = {
         type: "description",
         payload: {
           topic: searchTopic.topic,
           module_name: descriptionData.module_name,
-          level: descriptionData.level,
+          level: currentLevel,
           language: descriptionData.language,
           lesson_name:
             nextLessonData?.nextLessonTitle || descriptionData.lesson_name,
@@ -224,22 +317,59 @@ const DescriptionCard = ({
       ws.send(JSON.stringify(message));
     };
 
-    ws.onerror = (event) => {
-      console.log("WebSocket error:", event);
+    ws.onerror = () => {
       toast.error("Oops! Just try again.");
       ws.close();
     };
 
-    ws.onclose = (event) => {
-      console.log("Connection closed");
+    ws.onclose = () => {
+      if (!descriptionCleanupRef.current) {
+        setIsComplete(true);
+        saveDescription();
+      }
       ws.close();
     };
 
     return () => {
+      descriptionCleanupRef.current = true;
       ws.close();
       setLiveWords([]);
+      setDisplayedText("");
+      setIsComplete(false);
+      wordIndexRef.current = 0;
+      liveWordsRef.current = [];
     };
-  }, [currentLessonIndex]);
+  }, [currentLessonIndex, currentLevel]);
+
+  useEffect(() => {
+    if (liveWords.length === 0) return;
+
+    const timer = setInterval(() => {
+      if (wordIndexRef.current < liveWords.length) {
+        const nextWord = liveWords[wordIndexRef.current];
+
+        setDisplayedText((prev) => {
+          const needsSpace =
+            prev.length > 0 &&
+            !prev.endsWith(" ") &&
+            nextWord !== " " &&
+            nextWord !== "\n";
+          return prev + (needsSpace ? " " : "") + nextWord;
+        });
+
+        wordIndexRef.current += 1;
+
+        if (contentRef.current) {
+          contentRef.current.scrollTop = contentRef.current.scrollHeight;
+        }
+      } else {
+        setIsComplete(true);
+        clearInterval(timer);
+      }
+    }, 20);
+
+    return () => clearInterval(timer);
+  }, [liveWords.length]);
 
   const quizOnClickHandler = () => {
     dispatch(fetchQuizData());
@@ -257,10 +387,10 @@ const DescriptionCard = ({
       setCurrentLessonIndex((prev) => prev + 1);
       sendLessonDataToAPI(
         moduleData.find((module) => module.Title === lessonDatas).Chapters[
-        nextLessonIndex
+          nextLessonIndex
         ],
         nextLessonIndex,
-        moduleData
+        moduleData,
       );
     } else {
       toast.info("Congrats! This was the last chapter in this lesson.", {
@@ -270,7 +400,6 @@ const DescriptionCard = ({
   };
 
   const sendLessonDataToAPI = (lessonData, nextLessonIndex, moduleData) => {
-    // setNextLesson(lessonData.lesson_title);
     const payload = {
       nextLessonTitle: lessonData,
       nextChapterTitle: lessonDatas,
@@ -290,248 +419,167 @@ const DescriptionCard = ({
     localStorage.setItem("nextLessonData", JSON.stringify(payload));
   };
 
+  const currentTitle = nextLesonData?.nextLessonTitle || lessonTitle;
+
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexWrap: "wrap",
-        justifyContent: "center",
-        "& > :not(style)": {},
-        marginTop: { xs: "-1rem", sm: "-5rem" },
-      }}
-    >
-      <Paper
-        sx={isMobile ? mobile.descriptionCard : style.descriptionCard}
-        elevation={3}
-      >
+    <Box sx={style.mainContainer}>
+      <Paper sx={style.descriptionSection} elevation={0}>
         <Box sx={style.header}>
-          <Box
-            sx={{
-              letterSpacing: "0.44px",
-            }}
-          >
-            <Typography variant={isMobile ? "body1" : "h3"}>
-              {nextLesonData?.nextLessonTitle
-                ? nextLesonData.nextLessonTitle
-                : lessonTitle}
-            </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <Typography sx={style.headerTitle}>{currentTitle}</Typography>
           </Box>
-
-          {/* <Box sx={style.iconbox}>
-            <img
-              style={isMobile ? mobile.iconstyle : style.iconstyle}
-              src={copyIcon}
-              alt="likeIcon"
-            />
-            <img
-              style={isMobile ? mobile.iconstyle : style.iconstyle}
-              src={likeIcon}
-              alt="likeIcon"
-            />
-            <img
-              style={isMobile ? mobile.iconstyle : style.iconstyle}
-              src={dislikeIcon}
-              alt="likeIcon"
-            />
-          </Box> */}
+          <Chip
+            label={isComplete ? "Completed" : "Generating..."}
+            sx={{
+              backgroundColor: isComplete
+                ? "rgba(16, 185, 129, 0.2)"
+                : "rgba(255,255,255,0.2)",
+              color: "#fff",
+              fontWeight: 500,
+              fontSize: "0.75rem",
+            }}
+            size="small"
+          />
         </Box>
-        <Box sx={isMobile ? mobile.contentBox : style.contentBox}>
-          <Typography variant="h5">
-            {liveWords?.map((word, index) => {
-              if (/\d/.test(word)) {
-                return `${" "}${word}`;
-              }
-              // Check if the word is empty (space)
-              if (word === "") {
-                // Get the next word
-                const nextWord = liveWords[index + 1];
-                // Check if the next word is also empty (space)
-                if (nextWord === "") {
-                  // Render the current word and move to a new line
-                  return (
-                    <React.Fragment key={index}>
-                      <br />
-                      <br />
-                    </React.Fragment>
-                  );
-                }
-              }
 
-              // Render the word
-              return <span key={index}>{word}</span>;
-            })}
+        <Box
+          sx={isMobile ? mobile.contentBox : style.contentBox}
+          ref={contentRef}
+        >
+          {!isComplete && liveWords.length === 0 && (
+            <Box sx={style.loadingContainer}>
+              <Box sx={{ ...style.loadingDot, animationDelay: "0s" }} />
+              <Box sx={{ ...style.loadingDot, animationDelay: "0.2s" }} />
+              <Box sx={{ ...style.loadingDot, animationDelay: "0.4s" }} />
+              <Typography sx={{ ml: 1, fontWeight: 500 }}>
+                Generating content...
+              </Typography>
+            </Box>
+          )}
+
+          <Typography sx={style.contentText}>
+            {displayedText}
+            {!isComplete && <Box component="span" sx={style.cursor} />}
+          </Typography>
+        </Box>
+
+        <Box sx={style.statusContainer}>
+          <Typography sx={style.statusText}>
+            {!isComplete
+              ? "⏳ Please wait for the content to be fully generated"
+              : "✓ Content fully generated"}
           </Typography>
         </Box>
       </Paper>
-      <Box sx={{ textAlign: "center" }}>
-        <Typography sx={{ color: "gray", padding: "1rem 0rem" }}>
-          Please wait for the content to be fully generated before clicking
-          another button.
-        </Typography>
-      </Box>
-      <Box
-        sx={
-          isMobile
-            ? { ...style.bottomSection, flexDirection: "column" }
-            : style.bottomSection
-        }
-      >
-        {/* margin: "8px"  */}
+
+      <Paper sx={style.descriptionCard} elevation={0}>
         <Box sx={isMobile ? mobile.buttonsWrapper : style.buttonsWrapper}>
-          <Box
-            sx={
-              isMobile
-                ? { width: "100%", marginLeft: "5px", textAlign: "center" }
-                : {}
-            }
-          >
+          <Box sx={isMobile ? mobile.buttonGroup : style.buttonGroup}>
+            <Box>
+              <ButtonComponent
+                disabled={isButtonLoading}
+                variant={getButtonVariant("level")}
+                hovercolor="black"
+                sx={{ margin: "4px" }}
+                onClick={handleClick}
+              >
+                Edit Level: {currentLevel}
+              </ButtonComponent>
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleClose}
+                PaperProps={{
+                  sx: {
+                    borderRadius: "12px",
+                    boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+                  },
+                }}
+              >
+                {["Beginner", "Intermediate", "Advanced"].map((option) => (
+                  <MenuItem
+                    key={option}
+                    onClick={() => menuClickHandler(option)}
+                    sx={style.menuitemstyle}
+                  >
+                    <Box
+                      sx={{
+                        width: 24,
+                        display: "inline-flex",
+                        justifyContent: "flex-start",
+                      }}
+                    >
+                      {currentLevel === option && (
+                        <Check sx={{ fontSize: 18, color: "#667eea" }} />
+                      )}
+                    </Box>
+                    {option}
+                  </MenuItem>
+                ))}
+              </Menu>
+            </Box>
+
             <ButtonComponent
+              variant={getButtonVariant("examples")}
               disabled={isButtonLoading}
-              variant={variantchange}
+              sx={{ margin: "4px" }}
               hovercolor="black"
-              sx={
-                isMobile
-                  ? { ...mobile.button, margin: "8px" }
-                  : { margin: "8px" }
-              }
-              onClick={handleClick}
+              onClick={() => setButtonClicked("examples")}
             >
-              Edit Level
+              Give Me Examples
             </ButtonComponent>
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleClose}
-              PaperProps={{
-                sx: {
-                  borderRadius: "10px",
-                  width: "auto", // Apply border radius to the Paper component
-                },
-              }}
+
+            <ButtonComponent
+              variant={getButtonVariant("quiz")}
+              isLoading={isButtonLoading}
+              sx={{ margin: "4px" }}
+              onClick={quizOnClickHandler}
             >
-              <MenuItem
-                onClick={() => menuClickHandler("Beginner")}
-                sx={style.menuitemstyle}
-              >
-                Beginner
-              </MenuItem>
-              <MenuItem
-                onClick={() => menuClickHandler("Intermediate")}
-                sx={style.menuitemstyle}
-              >
-                Intermediate
-              </MenuItem>
-              <MenuItem
-                onClick={() => menuClickHandler("Advanced")}
-                sx={style.menuitemstyle}
-              >
-                Advanced
-              </MenuItem>
-            </Menu>
+              Quiz Me
+            </ButtonComponent>
+
+            <ButtonComponent
+              variant={getButtonVariant("question")}
+              disabled={isButtonLoading}
+              sx={{ margin: "4px" }}
+              hovercolor="black"
+              onClick={() => setButtonClicked("question")}
+            >
+              I have A Question
+            </ButtonComponent>
           </Box>
 
-          <ButtonComponent
-            variant="outlined"
-            disabled={isButtonLoading}
-            sx={
-              isMobile
-                ? { ...mobile.button, margin: "8px", marginLeft: "12px" }
-                : { margin: "8px" }
-            }
-            hovercolor="black"
-            onClick={() => setButtonClicked("examples")}
-          >
-            Give Me Examples
-          </ButtonComponent>
-
-          <ButtonComponent
-            variant="outlined"
-            isLoading={isButtonLoading}
-            sx={
-              isMobile
-                ? { ...mobile.button, margin: "8px", marginLeft: "12px" }
-                : {
-                  margin: "8px",
-                  ":hover": {
-                    backgroundColor: "black",
-                    color: "white",
-                  },
-                }
-            }
-            onClick={quizOnClickHandler}
-          >
-            Quiz Me
-          </ButtonComponent>
-          <ButtonComponent
-            variant="outlined"
-            disabled={isButtonLoading}
-            sx={
-              isMobile
-                ? { ...mobile.button, margin: "8px", marginLeft: "12px" }
-                : { margin: "8px" }
-            }
-            hovercolor="black"
-            onClick={() => setButtonClicked("question")}
-          >
-            I have A Question
-          </ButtonComponent>
-        </Box>
-        <Box
-          sx={
-            isMobile
-              ? { ...mobile.buttonsWrapper, width: "calc(100% - 16px)" }
-              : style.buttonsWrapper
-          }
-        >
           <ButtonComponent
             onClick={handelNextModule}
             disabled={isButtonLoading}
             variant="contained"
-            sx={
-              isMobile
-                ? {
-                  ...mobile.buttonsWrapper,
-                  justifyContent: "center",
-                  width: "78%",
-                  marginTop: "4px",
-                }
-                : { ...style.buttonsWrapper, justifyContent: "center" }
-            }
+            sx={{ minWidth: "200px" }}
           >
-            <Typography variant="h5" sx={{ marginRight: "5px" }}>
+            <Typography
+              sx={{ marginRight: "8px", color: "#fff", fontWeight: 500 }}
+            >
               Next Chapter
             </Typography>
-            <img src={arrowrightup} alt="arrow" />
+            <img
+              src={arrowrightup}
+              alt="arrow"
+              style={{
+                filter: "brightness(0) invert(1)",
+                width: 18,
+                height: 18,
+              }}
+            />
           </ButtonComponent>
         </Box>
-      </Box>
+      </Paper>
+
       {buttonClicked === "examples" ? (
-        <Example
-          exampleheader={
-            nextLesonData?.nextLessonTitle
-              ? nextLesonData.nextLessonTitle
-              : lessonTitle
-          }
-          isExample={isExample}
-        />
+        <Example exampleheader={currentTitle} isExample={isExample} />
       ) : quizData.length > 0 && buttonClicked === "quiz" ? (
         <QuizContainer quizData={quizData} />
       ) : buttonClicked === "question" ? (
         <AskQuestion descriptionData={descriptionData} />
-      ) : buttonClicked === "level" ? (
-        <Example
-          descriptionData={descriptionData}
-          exampleheader={
-            nextLesonData?.nextLessonTitle
-              ? `${nextLesonData.nextLessonTitle} - Level: ${levelType}`
-              : `${lessonTitle} - Level: ${levelType}`
-          }
-          type="level"
-          levelType={levelType}
-        />
-      ) : (
-        ""
-      )}
+      ) : null}
     </Box>
   );
 };

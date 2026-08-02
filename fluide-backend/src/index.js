@@ -1,20 +1,33 @@
 const mongoose = require("mongoose");
-const { WebSocketServer } = require("ws");
 const app = require("./app");
 const config = require("./config/config");
 const logger = require("./config/logger");
+const { WebSocketServer } = require("ws");
 const { userController } = require("./controllers");
-
 const wss = new WebSocketServer({ port: config.socket_port });
 
 let server;
-mongoose.connect(config.mongoose.url, config.mongoose.options).then(() => {
-  logger.info("Connected to MongoDB");
-});
 
-server = app.listen(config.port, () => {
-  logger.info(`Listening to port ${config.port}`);
-});
+mongoose
+  .connect(config.mongoose.url, config.mongoose.options)
+  .then(() => {
+    logger.info("Connected to MongoDB");
+    server = app.listen(config.port, () => {
+      logger.info(`Listening to port ${config.port}`);
+    });
+  })
+  .catch((error) => {
+    logger.error(`Failed to connect to MongoDB: ${error.message}`);
+    if (
+      error.name === "MongooseServerSelectionError" ||
+      /whitelist|access from an IP/i.test(error.message)
+    ) {
+      logger.error(
+        "Hint: Your current IP is probably not whitelisted in MongoDB Atlas. Add it under Network Access > IP Access List, then restart the server."
+      );
+    }
+    exitHandler();
+  });
 
 const exitHandler = () => {
   if (server) {
@@ -51,122 +64,87 @@ wss.on("connection", function (ws) {
     data = JSON.parse(data);
     switch (data.type) {
       case "description":
-        userController.getDescription(data.payload, function (err, response) {
-          let word = 0;
-          if (word == 0 && (response == "" || response == " ")) {
-          } else if (
-            response != "##" ||
-            response != "###" ||
-            response != " ##" ||
-            response != " ###"
-          ) {
-            word = 1;
-            if (response == ".\n\n") {
-              ws.send(JSON.stringify("."));
-              ws.send(JSON.stringify(""));
-              ws.send(JSON.stringify(""));
-            } else if (
-              response == "##" ||
-              response == "###" ||
-              response == " ##" ||
-              response == " ###"
-            ) {
-            } else if (response == ".\n\n") {
-              ws.send(JSON.stringify("."));
-              ws.send(JSON.stringify(""));
-              ws.send(JSON.stringify(""));
-            } else if (response == "\n\n") {
-              ws.send(JSON.stringify(""));
-              ws.send(JSON.stringify(""));
-            } else if (response.includes("\n\n")) {
-              const parts = response.split(/(\n\n)/);
-              ws.send(JSON.stringify(parts[0]));
-              ws.send(JSON.stringify(""));
-              ws.send(JSON.stringify(""));
-            } else {
-              ws.send(JSON.stringify(response));
-            }
+        userController.getDescription(data.payload, function (err, token) {
+          console.log(
+            "[WebSocket:description] Callback invoked. err=",
+            err,
+            ", token=",
+            token,
+          );
+          if (err) {
+            console.error("Gemini streaming error (callback):", err);
+            ws.send(
+              JSON.stringify({ type: "error", error: err?.message || err }),
+            );
+            return;
+          }
+          if (typeof token === "string" && token.trim() !== "") {
+            ws.send(JSON.stringify({ type: "description", token }));
+          } else if (token === null || token === undefined) {
+            console.warn(
+              "[WebSocket:description] Received null/undefined token from Gemini callback.",
+            );
+          } else {
+            console.warn(
+              "[WebSocket:description] Received non-string token:",
+              token,
+            );
           }
         });
         break;
-      // case "ask-question":
-      //   userController.askQuestion(data.payload, function (err, response) {
-      //     let word = 0;
-
-      //     if (word == 0 && (response == "" || response == " ")) {
-      //     } else {
-      //       if (
-      //         response != "##" ||
-      //         response != "###" ||
-      //         response != " ##" ||
-      //         response != " ###"
-      //       ) {
-      //         word = 1;
-      //         if (response == ".\n\n" || response == " \n\n") {
-      //           ws.send(JSON.stringify("."));
-      //           ws.send(JSON.stringify(""));
-      //           ws.send(JSON.stringify(""));
-      //         } else {
-      //           if (
-      //             response == "##" ||
-      //             response == "###" ||
-      //             response == " ##" ||
-      //             response == " ###"
-      //           ) {
-      //           } else if (response == ".\n\n" || response == " \n\n") {
-      //             ws.send(JSON.stringify("."));
-      //             ws.send(JSON.stringify(""));
-      //             ws.send(JSON.stringify(""));
-      //           } else if (response == "\n\n") {
-      //             ws.send(JSON.stringify(""));
-      //             ws.send(JSON.stringify(""));
-      //           } else if (response.includes("\n\n")) {
-      //             let parts = response.split(/(\n\n)/);
-      //             ws.send(JSON.stringify(parts[0]));
-      //             ws.send(JSON.stringify(""));
-      //             ws.send(JSON.stringify(""));
-      //           } else {
-      //             ws.send(JSON.stringify(response));
-      //           }
-      //         }
-      //       }
-      //     }
-      //   });
+      case "ask-question":
+        userController.askQuestion(data.payload, function (err, response) {
+          if (err) {
+            console.error("Gemini streaming error (callback):", err);
+            ws.send(
+              JSON.stringify({ type: "error", error: err?.message || err }),
+            );
+            return;
+          }
+          if (typeof response === "string" && response.trim() !== "") {
+            ws.send(JSON.stringify({ type: "AskQuestion", token: response }));
+          }
+        });
+        break;
       case "example":
         userController.getExample(data.payload, function (err, response) {
           let word = 0;
           if (word == 0 && (response == "" || response == " ")) {
-          } else if (
-            response != "##" ||
-            response != "###" ||
-            response != " ##" ||
-            response != " ###"
-          ) {
-            word = 1;
-            if (response == ".\n\n") {
-              ws.send(JSON.stringify("."));
-              ws.send(JSON.stringify(""));
-              ws.send(JSON.stringify(""));
-            } else if (
-              response == "##" ||
-              response == "###" ||
-              response == " ##" ||
-              response == " ###"
+          } else {
+            if (
+              response != "##" ||
+              response != "###" ||
+              response != " ##" ||
+              response != " ###"
             ) {
-            } else if (response == ".\n\n") {
-              ws.send(JSON.stringify("."));
-              ws.send(JSON.stringify(""));
-              ws.send(JSON.stringify(""));
-            } else if (response == "\n\n") {
-              ws.send(JSON.stringify(""));
-              ws.send(JSON.stringify(""));
-            } else if (response.includes("\n\n")) {
-              const parts = response.split(/(\n\n)/);
-              ws.send(JSON.stringify(parts[0]));
-              ws.send(JSON.stringify(""));
-              ws.send(JSON.stringify(""));
-            } else {
-              ws.send(JSON.stringify(response));
+              word = 1;
+              if (response == ".\n\n") {
+                ws.send(JSON.stringify("."));
+                ws.send(JSON.stringify(""));
+                ws.send(JSON.stringify(""));
+              } else {
+                if (
+                  response == "##" ||
+                  response == "###" ||
+                  response == " ##" ||
+                  response == " ###"
+                ) {
+                } else if (response == ".\n\n") {
+                  ws.send(JSON.stringify("."));
+                  ws.send(JSON.stringify(""));
+                  ws.send(JSON.stringify(""));
+                } else if (response == "\n\n") {
+                  ws.send(JSON.stringify(""));
+                  ws.send(JSON.stringify(""));
+                } else if (response.includes("\n\n")) {
+                  let parts = response.split(/(\n\n)/);
+                  ws.send(JSON.stringify(parts[0]));
+                  ws.send(JSON.stringify(""));
+                  ws.send(JSON.stringify(""));
+                } else {
+                  ws.send(JSON.stringify({ type: "Example", token: response }));
+                }
+              }
             }
           }
         });

@@ -13,3 +13,8 @@ coverage
 
 logs
 /build
+docker.compose.yml
+repomix-output.xml
+
+package-lock.json
+pnpm-lock.yaml

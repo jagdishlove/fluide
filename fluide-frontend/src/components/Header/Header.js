@@ -34,7 +34,7 @@ const Header = () => {
   const dispatch = useDispatch();
 
   const userData = useSelector(
-    (state) => state?.persistData?.loginData?.data?.user
+    (state) => state?.persistData?.loginData?.data?.user,
   );
   return (
     <AppBar
@@ -50,28 +50,52 @@ const Header = () => {
       position="static"
     >
       <Container maxWidth="xl">
-        <Toolbar sx={{ justifyContent: "space-between" }}>
-          <Box>
+        <Toolbar
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          {/* Left: logo */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 4 }}>
             <LazyLoadImage
               style={{ cursor: "pointer" }}
               onClick={() => {
                 navigate("/");
-                dispatch(cleanUpDataAction());
               }}
               src={logo}
               alt="logo"
             />
           </Box>
-          <Box>
+
+          {/* Center: nav (centered) */}
+          <Box
+            sx={{
+              flexGrow: 1,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          ></Box>
+
+          <Box sx={{ display: "flex", alignItems: "center" }}>
             {!userData ? (
-              <Button
-                sx={styles.loginBtn}
-                variant="contained"
-                onClick={() => navigate("/login")}
-                startIcon={<img src={loginIcon} alt="Login" />}
-              >
-                Sign In
-              </Button>
+              <Box sx={{ display: "flex", gap: 2 }}>
+                <Button
+                  sx={{ textTransform: "none", color: "black" }}
+                  onClick={() => navigate("/login")}
+                >
+                  Sign In
+                </Button>
+                <Button
+                  sx={styles.loginBtn}
+                  variant="contained"
+                  onClick={() => navigate("/signup")}
+                >
+                  Get Started
+                </Button>
+              </Box>
             ) : (
               <Box>
                 <HeaderPopOver />

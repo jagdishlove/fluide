@@ -8,6 +8,7 @@ import {
   stopSubmitButtonLoading,
 } from "../loading/loadingAction";
 import { toast } from "react-toastify";
+import { getCached, setCached, hashText } from "../../../utils/aiCacheService";
 import {
   FETCH_QUIZ_ANSWER_REQUEST,
   FETCH_QUIZ_FAILURE,
@@ -50,8 +51,20 @@ export const removeQuizAnswers = () => ({
 
 export const fetchQuizData = () => {
   return async (dispatch, getState) => {
-    const data = JSON.parse(localStorage.getItem("description"));
+    const data = JSON.parse(localStorage.getItem("description") || '""');
     const searchData = getState().persistData.moduleData.searchData;
+    const ctx = {
+      topic: searchData.topic,
+      module: hashText(data),
+      level: searchData.level,
+      language: searchData.language,
+    };
+    const cached = getCached("quiz", ctx);
+    if (cached) {
+      dispatch(removeQuizData());
+      dispatch(fetchQuizSuccess(cached));
+      return;
+    }
     const payload = {
       description: data,
       language: searchData.language,
@@ -67,6 +80,7 @@ export const fetchQuizData = () => {
       });
 
       dispatch(fetchQuizSuccess(response.data));
+      setCached("quiz", ctx, response.data);
       dispatch(stopButtonLoading());
     } catch (error) {
       if (error.code === "ERR_NETWORK") {

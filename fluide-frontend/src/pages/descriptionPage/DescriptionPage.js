@@ -1,9 +1,8 @@
 import React, { useEffect } from "react";
-import { Box, Container } from "@mui/system";
 import { IconButtonComponent } from "../../components/button/Button";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useNavigate, useParams } from "react-router-dom";
-import { Typography } from "@mui/material";
+import { Box, Container, Typography } from "@mui/material";
 import { useState } from "react";
 import DescriptionCard from "../../components/DescriptionCard/DescriptionCard";
 import { useDispatch, useSelector } from "react-redux";

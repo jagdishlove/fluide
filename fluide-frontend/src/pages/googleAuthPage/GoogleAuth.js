@@ -10,7 +10,7 @@ const GoogleAuth = () => {
 
   useEffect(() => {
     dispatch(googleLoginRedirectAction()).then((res) => {
-      navigate("/");
+      navigate("/dashboard");
     });
   }, []);
   return (

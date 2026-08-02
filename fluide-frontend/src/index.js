@@ -11,6 +11,7 @@ import { store, persistor } from "./redux/store";
 import { BrowserRouter as Router } from "react-router-dom";
 import AppWrapper from "./HOC/AppWrapper";
 import { PersistGate } from "redux-persist/integration/react";
+import ScrollToTop from "./utils/ScrollToTop";
 
 let theme = createTheme({
   typography: {
@@ -53,11 +54,12 @@ root.render(
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <Router>
+          <ScrollToTop />
           <AppWrapper>
             <App />
           </AppWrapper>
         </Router>
       </PersistGate>
     </Provider>
-  </ThemeProvider>
+  </ThemeProvider>,
 );

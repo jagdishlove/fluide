@@ -67,7 +67,6 @@ export default function ReusableCard({
             sx={{
               maxWidth: isMobile ? "100%" : 360,
               bgcolor: "background.paper",
-              // padding: "1.5rem 20px",
               paddingLeft: { xs: "1px", sm: "20px" },
               display: "flex",
               flexDirection: "column",

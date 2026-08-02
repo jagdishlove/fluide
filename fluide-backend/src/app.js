@@ -36,22 +36,13 @@ app.use(helmet());
 app.use(express.urlencoded({ extended: true }));
 
 // enable cors
-app.use(function (req, res, next) {
-  res.header("Access-Control-Allow-Credentials", true);
-  res.header("Access-Control-Allow-Origin", req.headers.origin);
-  // res.header('Access-Control-Allow-Origin', "*");
-  res.header(
-    "Access-Control-Allow-Methods",
-    "GET,PUT,POST,DELETE,UPDATE,OPTIONS"
-  );
-  res.header(
-    "Access-Control-Allow-Headers",
-    "X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept"
-  );
-  next();
-});
-
-// app.use(cors({ origin : 'http://localhost:3000', credentials: true }));
+app.use(
+  cors({
+    origin: ["http://localhost:3000", "http://localhost:3001"],
+    methods: "GET,POST,PUT,DELETE",
+    credentials: true,
+  })
+);
 
 app.use(
   cookieSession({
@@ -62,21 +53,6 @@ app.use(
 );
 app.use(passport.initialize());
 app.use(passport.session());
-
-// app.use(
-// 	cors({
-// 		origin: "http://localhost:3000",
-// 		methods: "GET,POST,PUT,DELETE",
-// 		credentials: true,
-// 	})
-// );
-app.use(
-  cors({
-    origin: "*",
-    methods: "GET,POST,PUT,DELETE",
-    credentials: true,
-  })
-);
 
 // jwt authentication
 passport.use("jwt", jwtStrategy);

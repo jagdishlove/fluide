@@ -1,9 +1,17 @@
 import axios from "axios";
+import { getDeviceId } from "../utils/deviceId";
+import { serverAddress } from "../config";
 
 const api = axios.create({
-  // baseURL: "https://www.fluide.ai/api",
-  // baseURL: "http://localhost:5000",
-  baseURL: "http://localhost:8080",
+  baseURL: serverAddress,
+});
+
+api.interceptors.request.use((config) => {
+  config.headers = {
+    ...config.headers,
+    "x-client-id": getDeviceId(),
+  };
+  return config;
 });
 
 export const makeApiRequest = async ({
