@@ -34,6 +34,9 @@ const envVarsSchema = Joi.object()
     EMAIL_FROM: Joi.string().description(
       "the from field in the emails sent by the app",
     ),
+    GENERATION_LIMIT: Joi.number()
+      .default(3)
+      .description("Daily AI generation limit per user or device"),
   })
   .unknown();
 
@@ -51,6 +54,7 @@ module.exports = {
   socket_port: envVars.SOCKET_PORT || 8081,
   googleApiKey: envVars.GOOGLE_API_KEY,
   openaiKey: envVars.OPENAI_KEY,
+  generationLimit: envVars.GENERATION_LIMIT,
   mongoose: {
     url: envVars.MONGODB_URL + (envVars.NODE_ENV === "test" ? "-test" : ""),
     options: {

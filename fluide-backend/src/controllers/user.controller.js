@@ -1,7 +1,7 @@
 "use strict";
 
 const catchAsync = require("../utils/catchAsync");
-const { userService } = require("../services");
+const { userService, usageService } = require("../services");
 const ApiError = require("../utils/ApiError");
 const httpStatus = require("http-status");
 const config = require("../config/config");
@@ -13,10 +13,18 @@ let {
 } = require("@langchain/core/messages");
 
 const getModule = catchAsync(async (req, res) => {
+  const usage = await usageService.checkAndIncrement(
+    usageService.resolveIdentity(req)
+  );
   const response = await userService.getModule(req.body);
   console.log("Raw response from getModule:", response); // Log the raw response
   // const validJsonString = response.content.replace(/'/g, '"');
-  res.json({ status: 200, data: { modules: response } });
+  res.json({ status: 200, data: { modules: response, usage } });
+});
+
+const getUsageStatus = catchAsync(async (req, res) => {
+  const usage = await usageService.getUsage(usageService.resolveIdentity(req));
+  res.json({ status: 200, data: usage });
 });
 
 const getLessons = catchAsync(async (req, res) => {
@@ -404,6 +412,7 @@ const resetPassword = catchAsync(async (req, res) => {
 module.exports = {
   getModule,
   getLessons,
+  getUsageStatus,
   getDescription,
   getQuiz,
   askQuestion,

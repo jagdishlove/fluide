@@ -11,6 +11,7 @@ import {
   FETCH_LESSON_SUCCESS,
   FETCH_LESSON_FAILURE,
   SAVE_LESSON_DATA,
+  SET_USAGE_STATUS,
 } from "./moduleDataActionTypes";
 
 import {
@@ -51,6 +52,25 @@ export const saveLessonDatas = (data) => ({
   payload: data,
 });
 
+export const setUsageStatus = (data) => ({
+  type: SET_USAGE_STATUS,
+  payload: data,
+});
+
+export const fetchUsageStatus = () => {
+  return async (dispatch) => {
+    try {
+      const response = await makeApiRequest({
+        endpoint: "/usage",
+        method: "GET",
+      });
+      dispatch(setUsageStatus(response.data));
+    } catch (error) {
+      // ignore - usage endpoint may not be reachable
+    }
+  };
+};
+
 export const fetchModuleData = (data) => {
   return async (dispatch) => {
     try {
@@ -63,14 +83,36 @@ export const fetchModuleData = (data) => {
         data,
       });
       let moduleData = response.data.modules;
+      if (response.data.usage) {
+        dispatch(setUsageStatus(response.data.usage));
+      }
 
       // if (!Array.isArray(moduleData)) {
       //   moduleData = convertModulesToArray(moduleData);
       // }
       dispatch(fetchDataSuccess(moduleData));
       dispatch(stopLoading());
+      return true;
     } catch (error) {
-      toast.error("Oops! Just try again.");
+      dispatch(fetchDataFailure(error?.message || "Oops! Just try again."));
+      if (error && error.code === 429) {
+        dispatch(
+          setUsageStatus({
+            count: 0,
+            limit: 0,
+            remaining: 0,
+            message:
+              error.message ||
+              "You have exceeded the maximum number of generation attempts.",
+          })
+        );
+        toast.error(
+          error.message || "You have exceeded the maximum number of generation attempts."
+        );
+      } else {
+        toast.error("Oops! Just try again.");
+      }
+      return false;
     } finally {
       dispatch(stopLoading());
     }

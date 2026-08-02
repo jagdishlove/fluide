@@ -17,10 +17,9 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   fetchModuleData,
   fetchLessonModuleData,
+  fetchUsageStatus,
 } from "../../redux/actions/modulesData/moduleDataAction";
 
-import { searchCounterIncrement } from "../../redux/actions/searchCounter/searchCounterAction";
-import Cookies from "js-cookie";
 import { viewLessonData } from "../../redux/actions/viewLessonAction/viewLessonAction";
 import LoadingSpinner from "../../components/loadingSpinner/LoadingSpinner";
 import { cleanUpDataAction } from "../../redux/actions/cleanUpData/cleanUpData";
@@ -39,6 +38,10 @@ const HomePage = () => {
     (state) => state.persistData.loginData.isLoggedIn
   );
   const loading = useSelector((state) => state.loadingReducer.isLoading);
+  const usage = useSelector(
+    (state) => state?.persistData?.moduleData?.usage
+  );
+  const usageBlocked = usage?.blocked ?? false;
 
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
@@ -60,15 +63,16 @@ const HomePage = () => {
     window.scrollTo(0, 0);
   }, [location]);
 
-  const [searchCount, setSearchCount] = useState(false);
+  useEffect(() => {
+    dispatch(fetchUsageStatus());
+  }, [userData]);
 
   const [options, setOptions] = useState({
     levels: "",
     languages: "",
   });
 
-  const generateHandler = (e) => {
-    const searchCount = Cookies.get("searchCount");
+  const generateHandler = async () => {
     dispatch(routeDataAction(""));
 
     const payload = {
@@ -80,17 +84,8 @@ const HomePage = () => {
       setError("Please enter all inputs.");
     } else {
       purgeCache({ topic: search });
-      if (userData) {
-        dispatch(fetchModuleData(payload));
-      } else {
-        dispatch(searchCounterIncrement());
-        setError("");
-        if (searchCount > 2) {
-          setSearchCount(true);
-        } else {
-          dispatch(fetchModuleData(payload));
-        }
-      }
+      setError("");
+      await dispatch(fetchModuleData(payload));
     }
   };
 
@@ -210,27 +205,37 @@ const HomePage = () => {
             gap: "1rem",
           }}
         >
-          <ButtonComponent onClick={generateHandler}>
+          <ButtonComponent
+            onClick={generateHandler}
+            disabled={usageBlocked}
+          >
             Generate Modules
           </ButtonComponent>
           <Typography variant="h6" sx={{ fontStyle: "italic" }}>
             Hint: Your topic can be as broad or as specific as you want.
           </Typography>
-          {searchCount && (
+          {usageBlocked && (
             <Box elevation={0} sx={{ padding: "1rem" }}>
               <Typography variant="h4">
-                You have exceeded the maximum number of attempts. Please{" "}
-                <span
-                  type="button"
-                  onClick={() => navigate("/login")}
-                  style={{
-                    color: "#6C8EA5",
-                    cursor: "pointer",
-                  }}
-                >
-                  log in{" "}
-                </span>
-                to continue.
+                {userData
+                  ? (usage?.message ||
+                    "You have exceeded the maximum number of generation attempts.")
+                  : (
+                    <>
+                      You have exceeded the maximum number of attempts. Please{" "}
+                      <span
+                        type="button"
+                        onClick={() => navigate("/login")}
+                        style={{
+                          color: "#6C8EA5",
+                          cursor: "pointer",
+                        }}
+                      >
+                        log in{" "}
+                      </span>
+                      to continue.
+                    </>
+                  )}
               </Typography>
             </Box>
           )}

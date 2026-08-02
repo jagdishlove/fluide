@@ -263,7 +263,7 @@ const DescriptionCard = ({
       chapter: nextLessonData?.nextLessonTitle
         ? undefined
         : descriptionData?.activity_name,
-      level: descriptionData?.level,
+      level: currentLevel,
       language: descriptionData?.language,
     };
 
@@ -305,7 +305,7 @@ const DescriptionCard = ({
         payload: {
           topic: searchTopic.topic,
           module_name: descriptionData.module_name,
-          level: descriptionData.level,
+          level: currentLevel,
           language: descriptionData.language,
           lesson_name:
             nextLessonData?.nextLessonTitle || descriptionData.lesson_name,
@@ -339,7 +339,7 @@ const DescriptionCard = ({
       wordIndexRef.current = 0;
       liveWordsRef.current = [];
     };
-  }, [currentLessonIndex]);
+  }, [currentLessonIndex, currentLevel]);
 
   useEffect(() => {
     if (liveWords.length === 0) return;
@@ -579,13 +579,6 @@ const DescriptionCard = ({
         <QuizContainer quizData={quizData} />
       ) : buttonClicked === "question" ? (
         <AskQuestion descriptionData={descriptionData} />
-      ) : buttonClicked === "level" ? (
-        <Example
-          descriptionData={descriptionData}
-          exampleheader={`${currentTitle} - Level: ${levelType}`}
-          type="level"
-          levelType={levelType}
-        />
       ) : null}
     </Box>
   );

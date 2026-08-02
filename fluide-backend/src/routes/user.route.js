@@ -23,6 +23,7 @@ router.post(
   validate(validation.userValidation.getLessons),
   controller.userController.getLessons,
 );
+router.get("/usage", controller.userController.getUsageStatus);
 router.get(
   "/description",
   validate(validation.userValidation.getDescription),
