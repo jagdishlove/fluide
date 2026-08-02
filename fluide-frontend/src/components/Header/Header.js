@@ -91,7 +91,7 @@ const Header = () => {
                 <Button
                   sx={styles.loginBtn}
                   variant="contained"
-                  onClick={() => navigate("/dashboard")}
+                  onClick={() => navigate("/signup")}
                 >
                   Get Started
                 </Button>
