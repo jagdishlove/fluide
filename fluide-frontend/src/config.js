@@ -1,7 +1,10 @@
-const serverAddress = process.env.REACT_APP_API_URL;
-const websocketUrl =
+const normalizeUrl = (url) => (url ? url.replace(/\/+$/, "") : undefined);
+
+const serverAddress = normalizeUrl(process.env.REACT_APP_API_URL);
+const websocketUrl = normalizeUrl(
   process.env.REACT_APP_WS_URL ||
-  (serverAddress ? serverAddress.replace(/^http/, "ws") : undefined);
+    (serverAddress ? serverAddress.replace(/^http/, "ws") : undefined),
+);
 
 if (!serverAddress) {
   console.warn(
