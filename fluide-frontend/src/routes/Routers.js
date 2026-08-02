@@ -16,6 +16,7 @@ import GoogleAuth from "../pages/googleAuthPage/GoogleAuth";
 import Privacy from "../pages/Privacy";
 import TermsAndCondition from "../pages/TermsAndCondition";
 import DescriptionPage from "../pages/descriptionPage/DescriptionPage";
+import PublicRoutes from "./PublicRoutes";
 
 const Routers = () => {
   return (
@@ -26,26 +27,34 @@ const Routers = () => {
         <Header />
         <div style={{ flex: 1 }}>
           <Routes>
+            {/* 1. UNIVERSAL / OPEN ROUTES (Accessible to everyone) */}
             <Route path="/" element={<LandingPage />} />
-            <Route path="/dashboard" element={<HomePage />} />
-            <Route path="/lesson/:id/:module" element={<LessonPage />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<TermsAndCondition />} />
+            <Route path="/paper" element={<DescriptionCard />} />
+
             <Route
               path="/lesson/:id/:module/chapter"
               element={<DescriptionPage />}
             />
-            <Route path="/paper" element={<DescriptionCard />} />
-            <Route path="/popover" element={<HeaderPopOver />} />
-            <Route path="/signup" element={<SignUpPage />} />
-            <Route path="/verification_page" element={<VerificationPage />} />
-            <Route path="/profile_settings" element={<Profilesettings />} />
-            <Route path="/googleLogin" element={<GoogleAuth />} />
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="/terms" element={<TermsAndCondition />} />
 
-            <Route path="/*" element={<ErrorPage />} />
-            <Route element={<ProtectedRoutes />}>
+            {/* 2. GUEST ONLY ROUTES (Redirects to /dashboard if already logged in) */}
+            <Route element={<PublicRoutes />}>
               <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<SignUpPage />} />
+              <Route path="/googleLogin" element={<GoogleAuth />} />
             </Route>
+
+            {/* 3. PROTECTED ROUTES (Redirects to /login if logged out) */}
+            <Route element={<ProtectedRoutes />}>
+              <Route path="/dashboard" element={<HomePage />} />
+              <Route path="/profile_settings" element={<Profilesettings />} />
+              <Route path="/verification_page" element={<VerificationPage />} />
+              <Route path="/lesson/:id/:module" element={<LessonPage />} />
+            </Route>
+
+            {/* 4. FALLBACK / 404 ROUTE */}
+            <Route path="*" element={<ErrorPage />} />
           </Routes>
         </div>
         <Footer />
