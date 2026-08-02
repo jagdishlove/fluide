@@ -1,16 +1,15 @@
-import { Box } from "@mui/system";
 import React from "react";
 import LeassonCard from "../lessonCard.js/LessonCard";
 import lessonListIcon from "../../../assets/icons/lessonListIcon.svg";
 import { LazyLoadImage } from "react-lazy-load-image-component";
-import { Container, Typography } from "@mui/material";
+import { Box, Container, Typography } from "@mui/material";
 import { useMediaQuery } from "../../../hook/useMediaQuery";
 import { useSelector } from "react-redux";
 
 const LessonModules = ({ onClick, handlerClick }) => {
   const isMobile = useMediaQuery("(max-width: 400px)");
   const lessonData = useSelector(
-    (state) => state?.persistData?.lessonModuleReducer?.data
+    (state) => state?.persistData?.lessonModuleReducer?.data,
   );
 
   return (
@@ -64,11 +63,7 @@ const LessonModules = ({ onClick, handlerClick }) => {
                     <span>{lessonTitle}</span>
                   </div>
                 }
-                list={
-                  lesson.Chapter
-                    ? lesson.Chapter
-                    : lesson.Chapters
-                }
+                list={lesson.Chapter ? lesson.Chapter : lesson.Chapters}
               />
             );
           })}

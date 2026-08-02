@@ -1,6 +1,5 @@
 export const style = {
   root: {
-    backgroundColor: "#ffffff",
     overflow: "hidden",
   },
   heroSection: {
@@ -31,7 +30,6 @@ export const style = {
     borderRadius: "50px",
   },
   featuresSection: {
-    backgroundColor: "#ffffff",
     padding: { xs: "80px 0", md: "100px 0" },
   },
   featureGrid: {
@@ -45,16 +43,19 @@ export const style = {
   },
   featureCard: {
     padding: "32px 28px",
-    backgroundColor: "#fff",
     borderRadius: "20px",
     height: "100%",
+    backgroundColor: "#ffffff",
     border: "1px solid #f1f5f9",
     transition: "all 0.3s ease",
     display: "flex",
     flexDirection: "column",
+    boxShadow:
+      "0 1.5px 3px rgba(0, 0, 0, 0.02), 0 4px 8px rgba(0, 0, 0, 0.03), 0 10px 18px rgba(0, 0, 0, 0.04)",
     "&:hover": {
       transform: "translateY(-8px)",
-      boxShadow: "0px 12px 30px rgba(0,0,0,0.06)",
+      boxShadow:
+        "0 3px 6px rgba(0, 0, 0, 0.03),    0 8px 16px rgba(0, 0, 0, 0.04),    0 18px 30px rgba(0, 0, 0, 0.06),    0 32px 50px rgba(0, 0, 0, 0.07)",
       borderColor: "#cbd5e1",
     },
   },
@@ -62,7 +63,7 @@ export const style = {
     width: "56px",
     height: "56px",
     borderRadius: "12px",
-    backgroundColor: "#f8fafc",
+
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -81,24 +82,29 @@ export const style = {
     flexGrow: 1,
   },
   howItWorks: {
-    backgroundColor: "#fcfcfc",
     padding: { xs: "80px 0", md: "100px 0" },
     borderTop: "1px solid #f0f0f0",
     borderBottom: "1px solid #f0f0f0",
   },
   stepBox: {
+    backgroundColor: "#ffffff",
     padding: "40px",
     borderRadius: "16px",
-    backgroundColor: "#fff",
+
     border: "1px solid #f0f0f0",
     transition: "all 0.3s ease",
+    boxShadow:
+      "0 1.5px 3px rgba(0, 0, 0, 0.02), 0 4px 8px rgba(0, 0, 0, 0.03), 0 10px 18px rgba(0, 0, 0, 0.04)",
     "&:hover": {
-      boxShadow: "0px 10px 20px rgba(0,0,0,0.03)",
+      boxShadow:
+        "0 3px 6px rgba(0, 0, 0, 0.03),    0 8px 16px rgba(0, 0, 0, 0.04),    0 18px 30px rgba(0, 0, 0, 0.06),    0 32px 50px rgba(0, 0, 0, 0.07)",
     },
   },
   footerCta: {
     padding: { xs: "80px 0", md: "120px 0" },
-    background: "linear-gradient(180deg, #fcfcfc 0%, #f3f7fa 100%)",
+    boxShadow:
+      "0 1.5px 3px rgba(0, 0, 0, 0.02), 0 4px 8px rgba(0, 0, 0, 0.03), 0 10px 18px rgba(0, 0, 0, 0.04)",
+    // background: "linear-gradient(180deg, #fcfcfc 0%, #f3f7fa 100%)",
   },
   footerCtaCard: {
     backgroundColor: "#ffffff",

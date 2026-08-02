@@ -1,13 +1,12 @@
 import React, { useState } from "react";
 import DescriptionCard from "../DescriptionCard/DescriptionCard";
 import { carddata } from "../DescriptionCard/cardData";
-import { Box } from "@mui/system";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import Popover from "@mui/material/Popover";
 import PopupState, { bindTrigger, bindPopover } from "material-ui-popup-state";
 import userimg from "../../assets/images/userimg.svg";
-import { Avatar } from "@mui/material";
+import { Avatar, Box } from "@mui/material";
 import data from "./Data";
 
 import { useNavigate } from "react-router-dom";

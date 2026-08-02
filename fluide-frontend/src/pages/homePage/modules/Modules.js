@@ -1,5 +1,4 @@
-import { Typography } from "@mui/material";
-import { Box } from "@mui/system";
+import { Box, Typography } from "@mui/material";
 import React from "react";
 import ReusableCard from "../../../components/card/Card";
 import moduleIcon from "../../../assets/icons/module.svg";

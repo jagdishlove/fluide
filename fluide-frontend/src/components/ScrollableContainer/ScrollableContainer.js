@@ -1,6 +1,5 @@
 import { useRef } from "react";
-import { Box } from "@mui/system";
-import { IconButton } from "@mui/material";
+import { Box, IconButton } from "@mui/material";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 
 const ScrollableContainer = ({

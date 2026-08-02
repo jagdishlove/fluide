@@ -1,8 +1,7 @@
-import { Box } from "@mui/system";
 import React, { useState } from "react";
 import { style, mobile } from "./style";
 import askQuestionIcon from "../../assets/icons/askQuestionIcon.svg";
-import { Typography, useMediaQuery } from "@mui/material";
+import { Box, Typography, useMediaQuery } from "@mui/material";
 import SearchInput from "../searchInput/SearchInput";
 import ButtonComponent from "../button/Button";
 import Example from "../Examples/Example";

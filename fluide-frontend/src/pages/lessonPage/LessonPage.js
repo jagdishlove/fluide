@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import LeassonCard from "./lessonCard.js/LessonCard";
 import lessonIcon from "../../assets/icons/module.svg";
-import { Box, Container } from "@mui/system";
 import ScrollableContainer from "../../components/ScrollableContainer/ScrollableContainer";
 import { IconButtonComponent } from "../../components/button/Button";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -13,7 +12,7 @@ import {
   useParams,
   useSearchParams,
 } from "react-router-dom";
-import { Typography } from "@mui/material";
+import { Box, Container, Typography } from "@mui/material";
 import { useState } from "react";
 import DescriptionCard from "../../components/DescriptionCard/DescriptionCard";
 import { useDispatch, useSelector } from "react-redux";
