@@ -1,0 +1,9 @@
+{
+  "name": "fluide_Backend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "heroku-postbuild": "npm install --prefix server",
+    "start": "npm start --prefix server"
+  }
+}
