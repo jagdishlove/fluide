@@ -1,0 +1,5 @@
+{
+  "rootDirectory": "fluide-frontend",
+  "framework": "create-react-app",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}

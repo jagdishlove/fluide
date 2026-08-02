@@ -24,7 +24,7 @@ import {
 } from "../../redux/actions/modulesData/moduleDataAction";
 import { toast } from "react-toastify";
 import QuizContainer from "../quiz/QuestionsContainer";
-import { serverAddress1 } from "../../config";
+import { websocketUrl } from "../../config";
 import { getCached, setCached } from "../../utils/aiCacheService";
 
 const style = {
@@ -286,7 +286,7 @@ const DescriptionCard = ({
     }
 
     descriptionCleanupRef.current = false;
-    const ws = new WebSocket(`${serverAddress1}`);
+    const ws = new WebSocket(websocketUrl);
 
     ws.onmessage = (event) => {
       const receivedData = JSON.parse(event.data);

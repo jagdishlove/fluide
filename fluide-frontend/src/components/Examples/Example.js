@@ -9,7 +9,7 @@ import { useMediaQuery } from "../../hook/useMediaQuery";
 import { style, mobile } from "./style";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import { serverAddress1 } from "../../config";
+import { websocketUrl } from "../../config";
 import { getCached, setCached } from "../../utils/aiCacheService";
 import "katex/dist/katex.min.css";
 
@@ -71,7 +71,7 @@ const Example = ({
     }
 
     exampleCleanupRef.current = false;
-    const ws = new WebSocket(`${serverAddress1}`);
+    const ws = new WebSocket(websocketUrl);
 
     const handleMessage = (receivedData) => {
       const token = receivedData?.token;

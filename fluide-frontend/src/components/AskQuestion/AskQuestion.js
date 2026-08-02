@@ -5,7 +5,7 @@ import { Box, Typography, useMediaQuery } from "@mui/material";
 import SearchInput from "../searchInput/SearchInput";
 import ButtonComponent from "../button/Button";
 import { toast } from "react-toastify";
-import { serverAddress1 } from "../../config";
+import { websocketUrl } from "../../config";
 import { useSelector } from "react-redux";
 import { getCached, setCached, hashText } from "../../utils/aiCacheService";
 const AskQuestion = ({ descriptionData }) => {
@@ -56,7 +56,7 @@ const AskQuestion = ({ descriptionData }) => {
     askCleanupRef.current = false;
     askMeWordsRef.current = [];
 
-    const ws = new WebSocket(`${serverAddress1}`);
+    const ws = new WebSocket(websocketUrl);
     wsRef.current = ws;
 
     ws.onopen = () => {
