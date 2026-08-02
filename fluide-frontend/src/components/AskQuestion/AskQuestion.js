@@ -6,11 +6,18 @@ import SearchInput from "../searchInput/SearchInput";
 import ButtonComponent from "../button/Button";
 import { toast } from "react-toastify";
 import { serverAddress1 } from "../../config";
+import { useSelector } from "react-redux";
+import { getCached, setCached, hashText } from "../../utils/aiCacheService";
 const AskQuestion = ({ descriptionData }) => {
   const [askMeQuestion, setAskMeQuestion] = useState([]);
   const [searchValue, setSearchValue] = useState("");
   const isMobile = useMediaQuery("(max-width:600px)");
   const wsRef = useRef(null);
+  const askMeWordsRef = useRef([]);
+  const askCleanupRef = useRef(false);
+  const searchData = useSelector(
+    (state) => state.persistData.moduleData.searchData,
+  );
 
   const askQuestioChangeHandler = (e) => {
     setSearchValue(e.target.value);
@@ -25,9 +32,29 @@ const AskQuestion = ({ descriptionData }) => {
   const askQuestionSearchHandler = () => {
     setAskMeQuestion([]);
 
+    const descriptionText = JSON.parse(
+      localStorage.getItem("description") || '""',
+    );
+    const ctx = {
+      topic: searchData?.topic,
+      module: hashText(descriptionText),
+      level: searchData?.level || descriptionData?.level || "Beginner",
+      language:
+        searchData?.language || descriptionData?.language || "english",
+      question: searchValue,
+    };
+
+    const cached = getCached("ask", ctx);
+    if (cached && Array.isArray(cached)) {
+      setAskMeQuestion(cached);
+      return;
+    }
+
     if (wsRef.current) {
       wsRef.current.close();
     }
+    askCleanupRef.current = false;
+    askMeWordsRef.current = [];
 
     const ws = new WebSocket(`${serverAddress1}`);
     wsRef.current = ws;
@@ -37,9 +64,10 @@ const AskQuestion = ({ descriptionData }) => {
         JSON.stringify({
           type: "ask-question",
           payload: {
-            level: descriptionData?.level || "Beginner",
-            language: descriptionData?.language || "english",
-            text: JSON.parse(localStorage.getItem("description") || '""'),
+            level: searchData?.level || descriptionData?.level || "Beginner",
+            language:
+              searchData?.language || descriptionData?.language || "english",
+            text: descriptionText,
             question: searchValue,
           },
         }),
@@ -63,6 +91,7 @@ const AskQuestion = ({ descriptionData }) => {
             filteredData.push(data[i]);
           }
 
+          askMeWordsRef.current = [...askMeWordsRef.current, ...filteredData];
           setAskMeQuestion((prevWords) => [...prevWords, ...filteredData]);
         }
       } catch (e) {
@@ -76,12 +105,16 @@ const AskQuestion = ({ descriptionData }) => {
     };
 
     ws.onclose = () => {
+      if (!askCleanupRef.current && askMeWordsRef.current.length > 0) {
+        setCached("ask", ctx, askMeWordsRef.current);
+      }
       ws.close();
     };
   };
 
   useEffect(() => {
     return () => {
+      askCleanupRef.current = true;
       if (wsRef.current) {
         wsRef.current.close();
       }

@@ -25,6 +25,7 @@ import { viewLessonData } from "../../redux/actions/viewLessonAction/viewLessonA
 import LoadingSpinner from "../../components/loadingSpinner/LoadingSpinner";
 import { cleanUpDataAction } from "../../redux/actions/cleanUpData/cleanUpData";
 import { routeDataAction } from "../../redux/actions/routesData/routesDataAction";
+import { purgeCache } from "../../utils/aiCacheService";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -78,6 +79,7 @@ const HomePage = () => {
     if (!search || !options.levels || !options.languages) {
       setError("Please enter all inputs.");
     } else {
+      purgeCache({ topic: search });
       if (userData) {
         dispatch(fetchModuleData(payload));
       } else {
@@ -94,6 +96,7 @@ const HomePage = () => {
 
   const viewLessonButtonHandler = (data, index) => {
     dispatch(viewLessonData(data));
+    purgeCache({ topic: searchData.topic, module: data });
     navigate(`/lesson/${index}/${data.toLowerCase()}`);
     const payload = {
       module_name: data,

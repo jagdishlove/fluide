@@ -13,14 +13,19 @@ import { useMediaQuery } from "../../hook/useMediaQuery";
 import ButtonComponent from "../button/Button";
 import arrowrightup from "../../assets/images/arrowrightup.svg";
 import { useDispatch, useSelector } from "react-redux";
+import { Check } from "@mui/icons-material";
 import Quiz from "../quiz/Quiz";
 import Example from "../Examples/Example";
 import AskQuestion from "../AskQuestion/AskQuestion";
 import { fetchQuizData } from "../../redux/actions/quizData/quizAction";
-import { saveLessonData } from "../../redux/actions/modulesData/moduleDataAction";
+import {
+  saveLessonData,
+  searchData,
+} from "../../redux/actions/modulesData/moduleDataAction";
 import { toast } from "react-toastify";
 import QuizContainer from "../quiz/QuestionsContainer";
 import { serverAddress1 } from "../../config";
+import { getCached, setCached } from "../../utils/aiCacheService";
 
 const style = {
   mainContainer: {
@@ -129,25 +134,24 @@ const style = {
   },
   buttonsWrapper: {
     display: "flex",
-    justifyContent: "flex-start",
+    justifyContent: "space-between",
+    alignItems: "center",
     flexWrap: "wrap",
     gap: "12px",
     padding: "20px 32px",
     backgroundColor: "#fff",
     borderTop: "1px solid #e5e7eb",
   },
-  bottomSection: {
+  buttonGroup: {
     display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
     flexWrap: "wrap",
-    gap: "16px",
-    padding: "16px 32px",
-    borderTop: "1px solid #e5e7eb",
+    alignItems: "center",
+    gap: "12px",
   },
   menuitemstyle: {
     display: "flex",
-    justifyContent: "center",
+    justifyContent: "flex-start",
+    gap: "8px",
     padding: "10px 20px",
     fontFamily: "'Inter', sans-serif",
     fontSize: "0.9rem",
@@ -164,10 +168,13 @@ const mobile = {
     alignItems: "stretch",
     gap: "10px",
     padding: "16px",
+    margin: "auto",
   },
-  bottomSection: {
+  buttonGroup: {
+    display: "flex",
     flexDirection: "column",
-    padding: "16px",
+    alignItems: "stretch",
+    gap: "10px",
   },
 };
 
@@ -181,29 +188,29 @@ const DescriptionCard = ({
   const dispatch = useDispatch();
   const quizData = useSelector((state) => state.nonPersistData.quizData);
   const isMobile = useMediaQuery("(max-width: 600px)");
+  const searchTopic = useSelector(
+    (state) => state.persistData.moduleData.searchData,
+  );
   const [liveWords, setLiveWords] = useState([]);
   const [displayedText, setDisplayedText] = useState("");
   const [isComplete, setIsComplete] = useState(false);
   const contentRef = useRef(null);
   const wordIndexRef = useRef(0);
   const liveWordsRef = useRef([]);
-
-  localStorage.setItem(
-    "description",
-    JSON.stringify(
-      liveWordsRef.current.filter((word) => word !== "").join(" "),
-    ),
-  );
+  const descriptionCleanupRef = useRef(false);
 
   const isButtonLoading = useSelector(
     (state) => state.loadingReducer.isButtonLoading,
   );
 
-  const [variantchange, setVariantchange] = useState("outlined");
   const [anchorEl, setAnchorEl] = useState(null);
   const [buttonClicked, setButtonClicked] = useState("");
-  const [levelType, setLevelType] = useState(null);
+  const [levelType, setLevelType] = useState(searchTopic?.level || null);
+  const currentLevel = levelType || searchTopic?.level || "Beginner";
   const isExample = true;
+
+  const getButtonVariant = (tab) =>
+    buttonClicked === tab ? "contained" : "outlined";
 
   const [currentLessonIndex, setCurrentLessonIndex] = useState(lessonIndex);
 
@@ -211,9 +218,6 @@ const DescriptionCard = ({
     (state) => state.persistData.lessonModuleReducer.data,
   );
 
-  const searchTopic = useSelector(
-    (state) => state.persistData.moduleData.searchData,
-  );
   const lessonDatas = useSelector(
     (state) => state.viewLessonReducer.viewLesson,
   );
@@ -237,18 +241,58 @@ const DescriptionCard = ({
     setLevelType(data);
     setAnchorEl(null);
     setButtonClicked("level");
+    const currentSearch =
+      searchTopic && !Array.isArray(searchTopic) ? searchTopic : {};
+    dispatch(searchData({ ...currentSearch, level: data }));
   };
+
+  useEffect(() => {
+    if (searchTopic?.level) {
+      setLevelType(searchTopic.level);
+    }
+  }, [searchTopic?.level]);
 
   useEffect(() => {
     const nextLessonData = JSON.parse(localStorage.getItem("nextLessonData"));
     nextLessonTitle(nextLessonData);
 
+    const ctx = {
+      topic: searchTopic?.topic,
+      module: descriptionData?.module_name,
+      lesson: nextLessonData?.nextLessonTitle || descriptionData?.lesson_name,
+      chapter: nextLessonData?.nextLessonTitle
+        ? undefined
+        : descriptionData?.activity_name,
+      level: descriptionData?.level,
+      language: descriptionData?.language,
+    };
+
+    const saveDescription = () => {
+      const fullText = liveWordsRef.current
+        .filter((word) => word !== "")
+        .join(" ");
+      if (fullText) {
+        setCached("description", ctx, fullText);
+        localStorage.setItem("description", JSON.stringify(fullText));
+      }
+    };
+
+    const cached = getCached("description", ctx);
+    if (cached) {
+      setDisplayedText(cached);
+      setIsComplete(true);
+      localStorage.setItem("description", JSON.stringify(cached));
+      return undefined;
+    }
+
+    descriptionCleanupRef.current = false;
     const ws = new WebSocket(`${serverAddress1}`);
 
     ws.onmessage = (event) => {
       const receivedData = JSON.parse(event.data);
       if (receivedData.token === "[DONE]") {
         setIsComplete(true);
+        saveDescription();
         return;
       }
       liveWordsRef.current = [...liveWordsRef.current, receivedData.token];
@@ -279,11 +323,15 @@ const DescriptionCard = ({
     };
 
     ws.onclose = () => {
-      setIsComplete(true);
+      if (!descriptionCleanupRef.current) {
+        setIsComplete(true);
+        saveDescription();
+      }
       ws.close();
     };
 
     return () => {
+      descriptionCleanupRef.current = true;
       ws.close();
       setLiveWords([]);
       setDisplayedText("");
@@ -425,80 +473,82 @@ const DescriptionCard = ({
       </Paper>
 
       <Paper sx={style.descriptionCard} elevation={0}>
-        <Box sx={style.buttonsWrapper}>
-          <Box>
+        <Box sx={isMobile ? mobile.buttonsWrapper : style.buttonsWrapper}>
+          <Box sx={isMobile ? mobile.buttonGroup : style.buttonGroup}>
+            <Box>
+              <ButtonComponent
+                disabled={isButtonLoading}
+                variant={getButtonVariant("level")}
+                hovercolor="black"
+                sx={{ margin: "4px" }}
+                onClick={handleClick}
+              >
+                Edit Level: {currentLevel}
+              </ButtonComponent>
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleClose}
+                PaperProps={{
+                  sx: {
+                    borderRadius: "12px",
+                    boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+                  },
+                }}
+              >
+                {["Beginner", "Intermediate", "Advanced"].map((option) => (
+                  <MenuItem
+                    key={option}
+                    onClick={() => menuClickHandler(option)}
+                    sx={style.menuitemstyle}
+                  >
+                    <Box
+                      sx={{
+                        width: 24,
+                        display: "inline-flex",
+                        justifyContent: "flex-start",
+                      }}
+                    >
+                      {currentLevel === option && (
+                        <Check sx={{ fontSize: 18, color: "#667eea" }} />
+                      )}
+                    </Box>
+                    {option}
+                  </MenuItem>
+                ))}
+              </Menu>
+            </Box>
+
             <ButtonComponent
+              variant={getButtonVariant("examples")}
               disabled={isButtonLoading}
-              variant={variantchange}
-              hovercolor="black"
               sx={{ margin: "4px" }}
-              onClick={handleClick}
+              hovercolor="black"
+              onClick={() => setButtonClicked("examples")}
             >
-              Edit Level
+              Give Me Examples
             </ButtonComponent>
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleClose}
-              PaperProps={{
-                sx: {
-                  borderRadius: "12px",
-                  boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
-                },
-              }}
+
+            <ButtonComponent
+              variant={getButtonVariant("quiz")}
+              isLoading={isButtonLoading}
+              sx={{ margin: "4px" }}
+              onClick={quizOnClickHandler}
             >
-              <MenuItem
-                onClick={() => menuClickHandler("Beginner")}
-                sx={style.menuitemstyle}
-              >
-                Beginner
-              </MenuItem>
-              <MenuItem
-                onClick={() => menuClickHandler("Intermediate")}
-                sx={style.menuitemstyle}
-              >
-                Intermediate
-              </MenuItem>
-              <MenuItem
-                onClick={() => menuClickHandler("Advanced")}
-                sx={style.menuitemstyle}
-              >
-                Advanced
-              </MenuItem>
-            </Menu>
+              Quiz Me
+            </ButtonComponent>
+
+            <ButtonComponent
+              variant={getButtonVariant("question")}
+              disabled={isButtonLoading}
+              sx={{ margin: "4px" }}
+              hovercolor="black"
+              onClick={() => setButtonClicked("question")}
+            >
+              I have A Question
+            </ButtonComponent>
           </Box>
 
-          <ButtonComponent
-            variant="outlined"
-            disabled={isButtonLoading}
-            sx={{ margin: "4px" }}
-            hovercolor="black"
-            onClick={() => setButtonClicked("examples")}
-          >
-            Give Me Examples
-          </ButtonComponent>
-
-          <ButtonComponent
-            variant="outlined"
-            isLoading={isButtonLoading}
-            sx={{ margin: "4px" }}
-            onClick={quizOnClickHandler}
-          >
-            Quiz Me
-          </ButtonComponent>
-
-          <ButtonComponent
-            variant="outlined"
-            disabled={isButtonLoading}
-            sx={{ margin: "4px" }}
-            hovercolor="black"
-            onClick={() => setButtonClicked("question")}
-          >
-            I have A Question
-          </ButtonComponent>
-        </Box>
-
-        <Box sx={style.bottomSection}>
           <ButtonComponent
             onClick={handelNextModule}
             disabled={isButtonLoading}

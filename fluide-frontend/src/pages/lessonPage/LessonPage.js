@@ -27,6 +27,7 @@ import { viewLessonData } from "../../redux/actions/viewLessonAction/viewLessonA
 import { cleanUpDataAction } from "../../redux/actions/cleanUpData/cleanUpData";
 import { routeDataAction } from "../../redux/actions/routesData/routesDataAction";
 import QuizContainer from "../../components/quiz/QuestionsContainer";
+import { purgeCache } from "../../utils/aiCacheService";
 
 const LessonPage = () => {
   const navigate = useNavigate();
@@ -83,6 +84,7 @@ const LessonPage = () => {
     module.charAt(0).toUpperCase() + module.slice(1);
   const sliderCardSubmitHandler = (data, index) => {
     dispatch(routeDataAction("lessons"));
+    purgeCache({ topic: searchData.topic, module: data });
     dispatch(viewLessonData(data));
     setIsDescription(false);
     setLessonTitle("");

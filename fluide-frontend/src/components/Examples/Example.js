@@ -10,6 +10,7 @@ import { style, mobile } from "./style";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { serverAddress1 } from "../../config";
+import { getCached, setCached } from "../../utils/aiCacheService";
 import "katex/dist/katex.min.css";
 
 const Example = ({
@@ -28,6 +29,7 @@ const Example = ({
   const wordIndexRef = useRef(0);
   const rawWordsRef = useRef([]);
   const isProcessingRef = useRef(false);
+  const exampleCleanupRef = useRef(false);
 
   const fetchStreamData = useSelector(
     (state) => state?.persistData?.lessonModuleReducer?.lessonData,
@@ -52,12 +54,31 @@ const Example = ({
       localStorage.getItem("nextLessonData") || "null",
     );
 
+    const cacheType = levelType ? "level-description" : "example";
+    const ctx = {
+      topic,
+      module: moduleName,
+      lesson: nextLessonData?.nextLessonTitle || lessonName,
+      chapter: nextLessonData?.nextLessonTitle ? undefined : activityName,
+      level: levelType || level,
+      language,
+    };
+
+    const cached = getCached(cacheType, ctx);
+    if (cached && Array.isArray(cached)) {
+      setRawWords(cached);
+      return undefined;
+    }
+
+    exampleCleanupRef.current = false;
     const ws = new WebSocket(`${serverAddress1}`);
 
     const handleMessage = (receivedData) => {
       const token = receivedData?.token;
       if (token === "[DONE]") {
         setIsComplete(true);
+        if (rawWordsRef.current.length)
+          setCached(cacheType, ctx, rawWordsRef.current);
         return;
       }
       if (token && typeof token === "string") {
@@ -127,11 +148,16 @@ const Example = ({
     };
 
     ws.onclose = () => {
-      setIsComplete(true);
+      if (!exampleCleanupRef.current) {
+        setIsComplete(true);
+        if (rawWordsRef.current.length)
+          setCached(cacheType, ctx, rawWordsRef.current);
+      }
       ws.close();
     };
 
     return () => {
+      exampleCleanupRef.current = true;
       ws.close();
       setRawWords([]);
       setDisplayedText("");
