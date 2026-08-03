@@ -33,8 +33,12 @@ export const style = {
     padding: { xs: "80px 0", md: "100px 0" },
   },
   featureGrid: {
-    display: "flex",
-    flexWrap: "balance",
+    display: { xs: "flex", md: "grid" },
+    flexWrap: "wrap",
+    gridTemplateColumns: {
+      xs: "1fr",
+      md: "repeat(3, minmax(0, 320px))",
+    },
     gap: 4,
     justifyContent: "center",
   },

@@ -63,7 +63,7 @@ const LandingPage = () => {
                 <img
                   src={moduleIcon}
                   alt="Adaptive"
-                  style={{ width: "32px" }}
+                  style={{ width: "52px" }}
                 />
               </Box>
               <Typography sx={style.featureTitle}>Adaptive Learning</Typography>
@@ -92,7 +92,7 @@ const LandingPage = () => {
                 <img
                   src={lessonListIcon}
                   alt="Curriculum"
-                  style={{ width: "32px" }}
+                  style={{ width: "52px" }}
                 />
               </Box>
               <Typography sx={style.featureTitle}>
@@ -123,7 +123,7 @@ const LandingPage = () => {
                 <img
                   src={quizIcon}
                   alt="Multilingual"
-                  style={{ width: "32px" }}
+                  style={{ width: "52px" }}
                 />
               </Box>
               <Typography sx={style.featureTitle}>Smart Assessments</Typography>
