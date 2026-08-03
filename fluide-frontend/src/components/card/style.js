@@ -45,13 +45,15 @@ export const style = {
 
   box: {
     display: "flex",
+    flexDirection: "column",
     alignItems: "center",
     marginBottom: { xs: "0rem", sm: "0rem" },
+    margin: "auto",
   },
   cardSlider: {
     display: "flex",
-    flexDirection: "row",
-    justifyContent: "content",
+    flexDirection: "column",
+    alignItems: "center",
   },
   icon: {
     float: "start",

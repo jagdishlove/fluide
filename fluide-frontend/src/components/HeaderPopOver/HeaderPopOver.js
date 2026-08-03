@@ -11,28 +11,34 @@ import data from "./Data";
 
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { getNameFromEmail } from "../../utils/utility";
+import { getAvatarInitials, getNameFromEmail } from "../../utils/utility";
 import { userLogOut } from "../../redux/actions/registerData/registerAction";
 const style = {
-  popoverbtn: {
+  popoverbtn: (isOpen) => ({
     backgroundColor: "#000000",
     color: "#ffffff",
-    borderRadius: "34px",
+    borderRadius: isOpen ? 0 : "34px", // Applied when popover is clicked/open
     height: "43px",
     padding: "10px 3px",
     textTransform: "none",
     display: "flex",
     justifyContent: "space-evenly",
-    "&:hover": {
+    transition: "all 0.3s ease-in-out",
+    minWidth: { xs: 0, md: "150px" },
+    "&:hover, &:active": {
       backgroundColor: "#000000",
       color: "#ffffff",
-      borderRadius: "34px",
+      borderRadius: 0,
       height: "43px",
       padding: "10px 3px",
       textTransform: "none",
     },
+  }),
+  popoverimg: {
+    backgroundColor: "white",
+    color: "#000000",
+    height: "38px",
   },
-  popoverimg: {},
   popoverbox: {
     width: "200px",
     borderRadius: "12px",
@@ -65,7 +71,8 @@ const HeaderPopOver = (data) => {
     (state) => state?.persistData?.loginData?.data?.user,
   );
 
-  const { email } = userData;
+  const { email, firstName, lastName } = userData;
+  const avatarName = getAvatarInitials(firstName, lastName, email);
 
   const [isOpen, setOpen] = useState(false);
 
@@ -91,14 +98,16 @@ const HeaderPopOver = (data) => {
           <div>
             <Button
               variant="contained"
-              sx={style.popoverbtn}
+              sx={style.popoverbtn(popupState.isOpen)}
               {...bindTrigger(popupState)}
             >
-              <Avatar
-                src={userimg1 ? userimg1 : userimg}
-                sx={style.popoverimg}
-              />
-              <Typography sx={{ padding: "0 1rem" }} variant="h6">
+              <Avatar src={userimg1 ? userimg1 : ""} sx={style.popoverimg}>
+                {avatarName}
+              </Avatar>
+              <Typography
+                sx={{ display: { xs: "none", sm: "block" }, padding: "0 1rem" }}
+                variant="h6"
+              >
                 My Profile
               </Typography>
             </Button>
@@ -117,7 +126,7 @@ const HeaderPopOver = (data) => {
             >
               <Box sx={style.popoverbox}>
                 <Box>
-                  {/* <Box
+                  <Box
                     sx={style.popovercontent}
                     onClick={() => {
                       handleClose();
@@ -135,7 +144,7 @@ const HeaderPopOver = (data) => {
                     <Typography variant="h6" sx={{ marginLeft: "10px" }}>
                       {email}
                     </Typography>
-                  </Box> */}
+                  </Box>
                   <Box
                     sx={style.popovertext}
                     onClick={() => {
