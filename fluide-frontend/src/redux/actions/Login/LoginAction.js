@@ -3,7 +3,6 @@ import {
   LOGIN_SUCCESS,
   LOGIN_ERROR,
   GOOGLE_LOGIN_REQUEST,
-  GOOGLE_LOGIN_FAILURE,
   GOOGLE_LOGIN_SUCCESS,
 } from "./LoginActionType";
 import { makeApiRequest } from "../../../api/api";
@@ -59,8 +58,8 @@ export const userLogin = (data) => {
   };
 };
 export const googleLoginAction = () => {
-  return async (dispatch) => {
-    window.open(`${serverAddress}/auth/google/`, "_self");
+  return async () => {
+    window.open(`${serverAddress}/auth/google`, "_self");
   };
 };
 
@@ -71,40 +70,21 @@ export const googleLoginRedirectAction = () => {
     try {
       const url = `${serverAddress}/auth/login/success`;
       const { data } = await axios.get(url, { withCredentials: true });
-      localStorage.setItem("token", data.user.token.accessToken);
+      console.log("datadata", data);
+      const accessToken = data?.user?.token?.accessToken;
+      if (!accessToken) {
+        throw new Error("No user session found.");
+      }
+      localStorage.setItem("token", accessToken);
       dispatch(googleLoginSuccess(data.user));
+      const name = data.user.user.firstName || data.user.user.email;
+      toast.success(`Welcome${name ? `, ${name}` : ""}!`);
+      return { success: true, user: data.user };
     } catch (error) {
-      toast.error("Oops! Just try again.");
+      toast.error("Google sign-in failed. Please try again.");
+      return { success: false, error };
     } finally {
       dispatch(stopLoading());
     }
   };
-  // try {
-  //   dispatch(login());
-  //   dispatch(startLoading());
-  //   const header = {
-  //     withCredentials: true,
-
-  //   };
-
-  //   const response = await makeApiRequest({
-  //     endpoint: "/auth/login/success",
-  //     method: "GET",
-  //     header,
-  //   });
-
-  //   dispatch(googleLoginSuccess(response.data));
-  //   window.location.href = "/";
-  //   dispatch(stopLoading());
-  //   return response;
-  // } catch (error) {
-  //   if (error.code === "ERR_NETWORK") {
-  //     toast.error("Oops! Just try again.");
-  //   } else {
-  //     toast.error("Oops! Just try again.");
-  //   }
-  //   dispatch(loginError(error.message));
-  //   dispatch(stopLoading());
-  //   throw error;
-  // }
 };

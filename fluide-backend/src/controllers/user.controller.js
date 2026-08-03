@@ -369,16 +369,9 @@ const deleteProfile = catchAsync(async (req, res) => {
   res.json({ status: 200, data: "Profile deleted successfully." });
 });
 
-const loginFailed = catchAsync(async (req, res) => {
-  res.status(401).json({
-    status: 401,
-    message: "Login Failure.",
-  });
-});
-
 const loginSucess = catchAsync(async (req, res) => {
   if (!req.user) {
-    res.status(403).json({ error: true, message: "Not Authorized." });
+    res.status(401).json({ error: true, message: "Not Authorized." });
     return;
   }
   const user = await userService.loginSucess(req.user);
@@ -421,7 +414,6 @@ module.exports = {
   login,
   updateProfile,
   getProfile,
-  loginFailed,
   loginSucess,
   logout,
   deleteProfile,

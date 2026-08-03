@@ -393,9 +393,7 @@ const DescriptionCard = ({
         moduleData,
       );
     } else {
-      toast.info("Congrats! This was the last chapter in this lesson.", {
-        position: toast.POSITION.TOP_CENTER,
-      });
+      toast.info("Congrats! This was the last chapter in this lesson.");
     }
   };
 
