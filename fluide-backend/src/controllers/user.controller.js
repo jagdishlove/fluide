@@ -17,7 +17,6 @@ const getModule = catchAsync(async (req, res) => {
     usageService.resolveIdentity(req)
   );
   const response = await userService.getModule(req.body);
-  console.log("Raw response from getModule:", response); // Log the raw response
   // const validJsonString = response.content.replace(/'/g, '"');
   res.json({ status: 200, data: { modules: response, usage } });
 });
@@ -29,7 +28,6 @@ const getUsageStatus = catchAsync(async (req, res) => {
 
 const getLessons = catchAsync(async (req, res) => {
   const response = await userService.getLessons(req.body);
-  console.log("Raw response from getLessons:", response); // Log the raw response
   // const validJsonString = response.content.replace(/'/g, '"');
   res.json({ status: 200, data: { lessons: response } });
 });
