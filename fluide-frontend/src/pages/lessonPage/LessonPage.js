@@ -131,16 +131,17 @@ const LessonPage = () => {
       level: searchData.level,
       language: searchData.language,
       lesson_name: data.Title,
-      activity_name: data.Chapters[0],
+      activity_name: (data.Chapter || data.Chapters)[0],
     });
     setIsDescription(true);
-    setLessonIndex(indexId);
+    setLessonIndex(0);
     setLessonTitle(lessonTitle);
-    setSpecificLessonTitle(data.Chapters[0]);
+    setSpecificLessonTitle((data.Chapter || data.Chapters)[0]);
   };
 
   const listClickHandler = (value, lessonData, index) => {
-    const findIndex = lessonData.Chapters.indexOf(value);
+    const chapters = lessonData.Chapter || lessonData.Chapters || [];
+    const findIndex = chapters.indexOf(value);
     dispatch(routeDataAction("description"));
     searchParams.set("page", "description");
     setSearchParams(searchParams);

@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 import { websocketUrl } from "../../config";
 import { useSelector } from "react-redux";
 import { getCached, setCached, hashText } from "../../utils/aiCacheService";
-const AskQuestion = ({ descriptionData }) => {
+const AskQuestion = ({ descriptionData, descriptionText }) => {
   const [askMeQuestion, setAskMeQuestion] = useState([]);
   const [searchValue, setSearchValue] = useState("");
   const isMobile = useMediaQuery("(max-width:600px)");
@@ -32,12 +32,19 @@ const AskQuestion = ({ descriptionData }) => {
   const askQuestionSearchHandler = () => {
     setAskMeQuestion([]);
 
-    const descriptionText = JSON.parse(
-      localStorage.getItem("description") || '""',
-    );
+    const effectiveDescription =
+      typeof descriptionText === "string" && descriptionText.trim()
+        ? descriptionText
+        : JSON.parse(localStorage.getItem("description") || '""');
+
+    if (!effectiveDescription || !effectiveDescription.trim()) {
+      toast.error("Please wait for the content to be fully generated.");
+      return;
+    }
+
     const ctx = {
       topic: searchData?.topic,
-      module: hashText(descriptionText),
+      module: hashText(effectiveDescription),
       level: searchData?.level || descriptionData?.level || "Beginner",
       language:
         searchData?.language || descriptionData?.language || "english",
@@ -67,7 +74,7 @@ const AskQuestion = ({ descriptionData }) => {
             level: searchData?.level || descriptionData?.level || "Beginner",
             language:
               searchData?.language || descriptionData?.language || "english",
-            text: descriptionText,
+            text: effectiveDescription,
             question: searchValue,
           },
         }),

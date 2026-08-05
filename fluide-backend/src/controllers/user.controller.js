@@ -141,8 +141,6 @@ const getDescription = async (data, callbacks) => {
               delays[Math.floor(Math.random() * delays.length)];
             await new Promise((resolve) => setTimeout(resolve, randomDelay));
 
-            // 4. Emit to WebSocket
-            // console.log("Sending:", `'${token}'`); // Should see "word "
             callbacks(null, token);
           }
         }
@@ -329,15 +327,13 @@ const getExample = catchAsync(async (data, callbacks) => {
               delays[Math.floor(Math.random() * delays.length)];
             await new Promise((resolve) => setTimeout(resolve, randomDelay));
 
-            // 4. Emit to WebSocket
-            // console.log("Sending:", `'${token}'`); // Should see "word "
             callbacks(null, token);
           }
         }
       }
     }
   } catch (err) {
-    console.error("Error in getDescription stream:", err);
+    console.error("Error in getExample stream:", err);
     callbacks(err, null);
   }
 });

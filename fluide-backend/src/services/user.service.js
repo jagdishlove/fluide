@@ -350,7 +350,6 @@ const getProfile = async (userData) => {
 };
 
 const deleteProfile = async (user) => {
-  console.log(user, "user");
   const profile = await User.findByIdAndUpdate(user._id, { isDeleted: true });
   return profile;
 };
