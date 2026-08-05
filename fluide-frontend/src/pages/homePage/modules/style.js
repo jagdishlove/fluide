@@ -70,7 +70,7 @@ export const style = {
   },
   header: {
     display: "flex",
-    alignItems: "flex-start",
+    alignItems: "center",
     gap: "1rem",
     marginBottom: "0.75rem",
   },
