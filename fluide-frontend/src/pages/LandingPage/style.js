@@ -31,6 +31,7 @@ export const style = {
   },
   featuresSection: {
     padding: { xs: "80px 0", md: "100px 0" },
+    
   },
   featureGrid: {
     display: { xs: "flex", md: "grid" },

@@ -46,11 +46,9 @@ export function getNameFromEmail(email) {
   return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
-
 export const removeConsecutiveSpaces = (dataArr) => {
   const cleanedData = [];
   let count = 0;
-
 
   for (let i = 0; i < dataArr.length; i++) {
     if (dataArr[i] === " ") {
@@ -87,13 +85,12 @@ export const removeThirdConsecutiveEmpty = (currentData, receivedData) => {
   return updatedData;
 };
 
-
 export const formatData = (rawData) => {
   let formattedData = "";
   let currentParagraph = "";
 
   rawData.forEach((word) => {
-    if (word === "\"\\n\"") {
+    if (word === '"\\n"') {
       if (currentParagraph !== "") {
         formattedData += currentParagraph.trim() + "\n\n";
         currentParagraph = "";
@@ -109,4 +106,17 @@ export const formatData = (rawData) => {
   }
 
   return formattedData;
+};
+
+export const getAvatarInitials = (firstName, lastName, email) => {
+  if (firstName && lastName) {
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  } else if (firstName) {
+    return firstName.charAt(0).toUpperCase();
+  } else if (lastName) {
+    return lastName.charAt(0).toUpperCase();
+  } else if (email) {
+    return email.charAt(0).toUpperCase();
+  }
+  return "";
 };

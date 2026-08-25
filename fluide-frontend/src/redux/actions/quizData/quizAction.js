@@ -49,9 +49,18 @@ export const removeQuizAnswers = () => ({
   type: REMOVE_QUIZ_ANSWERS,
 });
 
-export const fetchQuizData = () => {
+export const fetchQuizData = (descriptionText) => {
   return async (dispatch, getState) => {
-    const data = JSON.parse(localStorage.getItem("description") || '""');
+    const data =
+      typeof descriptionText === "string" && descriptionText.trim()
+        ? descriptionText
+        : JSON.parse(localStorage.getItem("description") || '""');
+
+    if (!data || !data.trim()) {
+      toast.error("Please wait for the content to be fully generated.");
+      return;
+    }
+
     const searchData = getState().persistData.moduleData.searchData;
     const ctx = {
       topic: searchData.topic,

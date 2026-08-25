@@ -25,8 +25,8 @@ const jwtVerify = async (payload, done) => {
 passport.use(
   new GoogleStrategy(
     {
-      clientID: process.env.CLIENT_ID,
-      clientSecret: process.env.CLIENT_SECRET,
+      clientID: config.google.clientID,
+      clientSecret: config.google.clientSecret,
       callbackURL: `${config.apiUrl}/auth/google/callback`,
       scope: ["profile", "email"],
     },

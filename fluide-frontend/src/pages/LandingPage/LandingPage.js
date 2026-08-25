@@ -3,6 +3,7 @@ import { Box, Typography, Container, Grid, Stack } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import ButtonComponent from "../../components/button/Button";
 import { style } from "./style";
+import SubscriptionPlans from "./modules/SubscriptionPlans";
 
 import moduleIcon from "../../assets/icons/module.svg";
 import lessonListIcon from "../../assets/icons/lessonListIcon.svg";
@@ -200,6 +201,9 @@ const LandingPage = () => {
           </Stack>
         </Container>
       </Box>
+
+      {/* Subscription Plans */}
+      <SubscriptionPlans />
 
       {/* Bottom CTA */}
       <Box sx={style.footerCta}>

@@ -32,7 +32,7 @@ export const forgetPasswordAction = (payload) => {
       });
       toast.success(
         "We’ve sent you an email to reset your password. Please check your inbox and spam folder!",
-        { position: toast.POSITION.TOP_CENTER, autoClose: 5000 }
+        { autoClose: 5000 },
       );
     } catch (error) {
       toast.error(error.message || "Oops! Just try again.");

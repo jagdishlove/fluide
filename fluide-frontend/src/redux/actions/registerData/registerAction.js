@@ -43,7 +43,7 @@ export const fetchRegisterData = (data, navigate) => {
         let res = response.data;
         toast.success(
           "We’ve sent you an email to verify your email address. Please check your inbox and spam folder!",
-          { position: toast.POSITION.TOP_CENTER, autoClose: 5000 }
+          { autoClose: 5000 },
         );
         navigate("/login");
         dispatch(fetchRegisterSuccess(res));

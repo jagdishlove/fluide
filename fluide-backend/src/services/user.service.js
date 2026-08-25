@@ -328,7 +328,9 @@ const login = async (data) => {
       );
     } else {
       const token = await tokenService.generateAuthTokens(userExist);
-      return { user: userExist, token };
+      const user = userExist.toObject();
+      delete user.password;
+      return { user, token };
     }
   }
 };
@@ -348,21 +350,37 @@ const getProfile = async (userData) => {
 };
 
 const deleteProfile = async (user) => {
-  console.log(user, "user");
   const profile = await User.findByIdAndUpdate(user._id, { isDeleted: true });
   return profile;
 };
 
 const loginSucess = async (userData) => {
-  let user = await User.findOne({ email: userData.emails[0].value });
+  const email = userData.emails[0].value;
+  const firstName =
+    userData.name?.givenName || userData.displayName?.split(" ")[0] || "";
+  const lastName =
+    userData.name?.familyName || userData.displayName?.split(" ").slice(1).join(" ");
+
+  let user = await User.findOne({ email });
   if (user) {
-    const token = await tokenService.generateAuthTokens(user);
-    return { user, token };
+    if (user.isDeleted) {
+      throw new ApiError(
+        httpStatus.FORBIDDEN,
+        "This account has been deactivated.",
+      );
+    }
+    if (!user.firstName && firstName) user.firstName = firstName;
+    if (!user.lastName && lastName) user.lastName = lastName;
+    if (user.isModified()) await user.save();
+  } else {
+    user = new User({ email, isVerified: true, firstName, lastName });
+    await user.save();
   }
-  user = new User({ email: userData.emails[0].value, isVerified: true });
-  await user.save();
+
   const token = await tokenService.generateAuthTokens(user);
-  return { user, token };
+  const userObj = user.toObject();
+  delete userObj.password;
+  return { user: userObj, token };
 };
 
 const verifyEmail = async (data) => {

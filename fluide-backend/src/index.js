@@ -70,12 +70,6 @@ wss.on("connection", function (ws) {
     switch (data.type) {
       case "description":
         userController.getDescription(data.payload, function (err, token) {
-          console.log(
-            "[WebSocket:description] Callback invoked. err=",
-            err,
-            ", token=",
-            token,
-          );
           if (err) {
             console.error("Gemini streaming error (callback):", err);
             ws.send(
@@ -85,15 +79,6 @@ wss.on("connection", function (ws) {
           }
           if (typeof token === "string" && token.trim() !== "") {
             ws.send(JSON.stringify({ type: "description", token }));
-          } else if (token === null || token === undefined) {
-            console.warn(
-              "[WebSocket:description] Received null/undefined token from Gemini callback.",
-            );
-          } else {
-            console.warn(
-              "[WebSocket:description] Received non-string token:",
-              token,
-            );
           }
         });
         break;

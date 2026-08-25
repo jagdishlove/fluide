@@ -17,7 +17,6 @@ const getModule = catchAsync(async (req, res) => {
     usageService.resolveIdentity(req)
   );
   const response = await userService.getModule(req.body);
-  console.log("Raw response from getModule:", response); // Log the raw response
   // const validJsonString = response.content.replace(/'/g, '"');
   res.json({ status: 200, data: { modules: response, usage } });
 });
@@ -29,7 +28,6 @@ const getUsageStatus = catchAsync(async (req, res) => {
 
 const getLessons = catchAsync(async (req, res) => {
   const response = await userService.getLessons(req.body);
-  console.log("Raw response from getLessons:", response); // Log the raw response
   // const validJsonString = response.content.replace(/'/g, '"');
   res.json({ status: 200, data: { lessons: response } });
 });
@@ -143,8 +141,6 @@ const getDescription = async (data, callbacks) => {
               delays[Math.floor(Math.random() * delays.length)];
             await new Promise((resolve) => setTimeout(resolve, randomDelay));
 
-            // 4. Emit to WebSocket
-            // console.log("Sending:", `'${token}'`); // Should see "word "
             callbacks(null, token);
           }
         }
@@ -331,15 +327,13 @@ const getExample = catchAsync(async (data, callbacks) => {
               delays[Math.floor(Math.random() * delays.length)];
             await new Promise((resolve) => setTimeout(resolve, randomDelay));
 
-            // 4. Emit to WebSocket
-            // console.log("Sending:", `'${token}'`); // Should see "word "
             callbacks(null, token);
           }
         }
       }
     }
   } catch (err) {
-    console.error("Error in getDescription stream:", err);
+    console.error("Error in getExample stream:", err);
     callbacks(err, null);
   }
 });
@@ -369,16 +363,9 @@ const deleteProfile = catchAsync(async (req, res) => {
   res.json({ status: 200, data: "Profile deleted successfully." });
 });
 
-const loginFailed = catchAsync(async (req, res) => {
-  res.status(401).json({
-    status: 401,
-    message: "Login Failure.",
-  });
-});
-
 const loginSucess = catchAsync(async (req, res) => {
   if (!req.user) {
-    res.status(403).json({ error: true, message: "Not Authorized." });
+    res.status(401).json({ error: true, message: "Not Authorized." });
     return;
   }
   const user = await userService.loginSucess(req.user);
@@ -421,7 +408,6 @@ module.exports = {
   login,
   updateProfile,
   getProfile,
-  loginFailed,
   loginSucess,
   logout,
   deleteProfile,

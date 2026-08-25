@@ -199,6 +199,9 @@ const DescriptionCard = ({
   const liveWordsRef = useRef([]);
   const descriptionCleanupRef = useRef(false);
 
+  const getCurrentDescription = () =>
+    liveWordsRef.current.filter((word) => word !== "").join(" ");
+
   const isButtonLoading = useSelector(
     (state) => state.loadingReducer.isButtonLoading,
   );
@@ -259,10 +262,8 @@ const DescriptionCard = ({
     const ctx = {
       topic: searchTopic?.topic,
       module: descriptionData?.module_name,
-      lesson: nextLessonData?.nextLessonTitle || descriptionData?.lesson_name,
-      chapter: nextLessonData?.nextLessonTitle
-        ? undefined
-        : descriptionData?.activity_name,
+      lesson: descriptionData?.lesson_name,
+      chapter: nextLessonData?.nextLessonTitle || descriptionData?.activity_name,
       level: currentLevel,
       language: descriptionData?.language,
     };
@@ -307,11 +308,9 @@ const DescriptionCard = ({
           module_name: descriptionData.module_name,
           level: currentLevel,
           language: descriptionData.language,
-          lesson_name:
-            nextLessonData?.nextLessonTitle || descriptionData.lesson_name,
-          activity_name: nextLessonData?.nextLessonTitle
-            ? undefined
-            : descriptionData.activity_name,
+          lesson_name: descriptionData.lesson_name,
+          activity_name:
+            nextLessonData?.nextLessonTitle || descriptionData.activity_name,
         },
       };
       ws.send(JSON.stringify(message));
@@ -372,48 +371,44 @@ const DescriptionCard = ({
   }, [liveWords.length]);
 
   const quizOnClickHandler = () => {
-    dispatch(fetchQuizData());
+    dispatch(fetchQuizData(getCurrentDescription()));
     setButtonClicked("quiz");
   };
 
   const handelNextModule = () => {
     setButtonClicked("");
 
+    const currentLesson = moduleData.find(
+      (module) => module.Title === lessonDatas,
+    );
+    const chapters = currentLesson?.Chapter || currentLesson?.Chapters || [];
+
     const nextLessonIndex = currentLessonIndex + 1;
-    if (
-      nextLessonIndex <
-      moduleData.find((module) => module.Title === lessonDatas).Chapters.length
-    ) {
+    if (nextLessonIndex < chapters.length) {
       setCurrentLessonIndex((prev) => prev + 1);
-      sendLessonDataToAPI(
-        moduleData.find((module) => module.Title === lessonDatas).Chapters[
-          nextLessonIndex
-        ],
-        nextLessonIndex,
-        moduleData,
-      );
+      sendLessonDataToAPI(chapters[nextLessonIndex], nextLessonIndex);
     } else {
-      toast.info("Congrats! This was the last chapter in this lesson.", {
-        position: toast.POSITION.TOP_CENTER,
-      });
+      toast.info("Congrats! This was the last chapter in this lesson.");
     }
   };
 
-  const sendLessonDataToAPI = (lessonData, nextLessonIndex, moduleData) => {
+  const sendLessonDataToAPI = (nextChapterTitle, nextLessonIndex) => {
     const payload = {
-      nextLessonTitle: lessonData,
+      nextLessonTitle: nextChapterTitle,
       nextChapterTitle: lessonDatas,
       index: nextLessonIndex,
-      mainIndex: moduleData.findIndex((module) => module.Title === lessonDatas),
+      mainIndex: moduleData.findIndex(
+        (module) => module.Title === lessonDatas,
+      ),
     };
 
     setNextLessonData(payload);
     const nextLessonApi = {
       module_name: descriptionData.module_name,
-      lesson_name: lessonData.Title,
+      lesson_name: lessonDatas,
       level: descriptionData.level,
       language: descriptionData.language,
-      activity_name: undefined,
+      activity_name: nextChapterTitle,
     };
     dispatch(saveLessonData(nextLessonApi));
     localStorage.setItem("nextLessonData", JSON.stringify(payload));
@@ -532,6 +527,7 @@ const DescriptionCard = ({
             <ButtonComponent
               variant={getButtonVariant("quiz")}
               isLoading={isButtonLoading}
+              disabled={isButtonLoading || !isComplete}
               sx={{ margin: "4px" }}
               onClick={quizOnClickHandler}
             >
@@ -540,7 +536,7 @@ const DescriptionCard = ({
 
             <ButtonComponent
               variant={getButtonVariant("question")}
-              disabled={isButtonLoading}
+              disabled={isButtonLoading || !isComplete}
               sx={{ margin: "4px" }}
               hovercolor="black"
               onClick={() => setButtonClicked("question")}
@@ -578,7 +574,10 @@ const DescriptionCard = ({
       ) : quizData.length > 0 && buttonClicked === "quiz" ? (
         <QuizContainer quizData={quizData} />
       ) : buttonClicked === "question" ? (
-        <AskQuestion descriptionData={descriptionData} />
+        <AskQuestion
+          descriptionData={descriptionData}
+          descriptionText={getCurrentDescription()}
+        />
       ) : null}
     </Box>
   );

@@ -5,7 +5,7 @@ import {
   FormHelperText,
   Paper,
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import ButtonComponent from "../../components/button/Button";
 import Dropdown from "../../components/dropdown/Dropdown";
 import SearchInput from "../../components/searchInput/SearchInput";
@@ -45,6 +45,8 @@ const HomePage = () => {
 
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
+  const [scrollToModules, setScrollToModules] = useState(false);
+  const modulesRef = useRef(null);
   const searchChangeHandler = (e) => {
     setSearch(e.target.value);
   };
@@ -54,6 +56,18 @@ const HomePage = () => {
       generateHandler();
     }
   }
+
+  useEffect(() => {
+    if (scrollToModules && data?.length > 0) {
+      setScrollToModules(false);
+      requestAnimationFrame(() => {
+        modulesRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      });
+    }
+  }, [scrollToModules, data]);
 
   useEffect(() => {
     dispatch(cleanUpDataAction());
@@ -85,7 +99,10 @@ const HomePage = () => {
     } else {
       purgeCache({ topic: search });
       setError("");
-      await dispatch(fetchModuleData(payload));
+      const success = await dispatch(fetchModuleData(payload));
+      if (success) {
+        setScrollToModules(true);
+      }
     }
   };
 
@@ -240,7 +257,7 @@ const HomePage = () => {
             </Box>
           )}
         </Box>
-        <Box sx={{ marginTop: "2rem" }}>
+        <Box sx={{ marginTop: "2rem", scrollMarginTop: "1.5rem" }} ref={modulesRef}>
           {data?.length > 0 && (
             <Modules
               data={data}

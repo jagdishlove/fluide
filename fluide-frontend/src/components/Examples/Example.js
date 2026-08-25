@@ -58,8 +58,8 @@ const Example = ({
     const ctx = {
       topic,
       module: moduleName,
-      lesson: nextLessonData?.nextLessonTitle || lessonName,
-      chapter: nextLessonData?.nextLessonTitle ? undefined : activityName,
+      lesson: lessonName,
+      chapter: nextLessonData?.nextLessonTitle || activityName,
       level: levelType || level,
       language,
     };
@@ -105,10 +105,8 @@ const Example = ({
             module_name: moduleName,
             level: levelType,
             language,
-            lesson_name: nextLessonData?.nextLessonTitle || lessonName,
-            activity_name: nextLessonData?.nextLessonTitle
-              ? undefined
-              : activityName,
+            lesson_name: lessonName,
+            activity_name: nextLessonData?.nextLessonTitle || activityName,
           },
         };
         ws.send(JSON.stringify(message));
@@ -131,10 +129,8 @@ const Example = ({
             module_name: moduleName,
             level,
             language,
-            lesson_name: nextLessonData?.nextLessonTitle || lessonName,
-            activity_name: nextLessonData?.nextLessonTitle
-              ? undefined
-              : activityName,
+            lesson_name: lessonName,
+            activity_name: nextLessonData?.nextLessonTitle || activityName,
           },
         };
         ws.send(JSON.stringify(message));

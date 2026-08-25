@@ -12,6 +12,11 @@ const envVarsSchema = Joi.object()
       .required(),
     PORT: Joi.number(),
     GOOGLE_API_KEY: Joi.string(),
+    CLIENT_ID: Joi.string().description("Google OAuth client id"),
+    CLIENT_SECRET: Joi.string().description("Google OAuth client secret"),
+    SESSION_SECRET: Joi.string().description(
+      "Secret used to sign session cookies",
+    ),
     MONGODB_URL: Joi.string().description("Mongo DB url"),
     JWT_SECRET: Joi.string().description("JWT secret key"),
     API_URL: Joi.string().description("Backend API URL").when("NODE_ENV", {
@@ -63,6 +68,11 @@ module.exports = {
   env: envVars.NODE_ENV,
   port: envVars.PORT || 8080,
   googleApiKey: envVars.GOOGLE_API_KEY,
+  google: {
+    clientID: envVars.CLIENT_ID,
+    clientSecret: envVars.CLIENT_SECRET,
+  },
+  sessionSecret: envVars.SESSION_SECRET || "cyberwolve",
   openaiKey: envVars.OPENAI_KEY,
   generationLimit: envVars.GENERATION_LIMIT,
   apiUrl: normalizeUrl(envVars.API_URL) || `http://localhost:${envVars.PORT || 8080}`,
