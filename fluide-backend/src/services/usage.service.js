@@ -1,4 +1,5 @@
 const httpStatus = require("http-status");
+const jwt = require("jsonwebtoken");
 const config = require("../config/config");
 const ApiError = require("../utils/ApiError");
 const { GenerationUsage } = require("../models");
@@ -12,7 +13,21 @@ const resolveIdentity = (req) => {
   if (req.user && req.user._id) {
     return `user:${req.user._id}`;
   }
-  if (req.headers["x-client-id"]) {
+  const authHeader = req.headers?.authorization;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    const token = authHeader.slice("Bearer ".length).trim();
+    if (token) {
+      try {
+        const payload = jwt.verify(token, config.jwt.secret);
+        if (payload?.sub) {
+          return `user:${payload.sub}`;
+        }
+      } catch (error) {
+        // fall through to device identity when auth token is invalid/expired
+      }
+    }
+  }
+  if (req.headers?.["x-client-id"]) {
     return `device:${req.headers["x-client-id"]}`;
   }
   return null;
